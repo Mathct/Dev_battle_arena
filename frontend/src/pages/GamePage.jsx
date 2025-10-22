@@ -92,9 +92,17 @@ function GamePage() {
     if (isAuthenticated && user && isConnected && !hasJoinedGame) {
       // Petit délai pour s'assurer que la connexion est stable
       setTimeout(() => {
-        socket.emit('joinGame', user.username);
-        setHasJoinedGame(true);
-        console.log("🎮 Rejoint automatiquement la partie");
+        if (user.role === 'admin') {
+          // Les admins se connectent au serveur mais ne rejoignent pas le jeu
+          socket.emit('joinGame', user.username, true);
+          setHasJoinedGame(true);
+          console.log("👑 Admin connecté au serveur (mode surveillance)");
+        } else {
+          // Les joueurs normaux rejoignent le jeu
+          socket.emit('joinGame', user.username, false);
+          setHasJoinedGame(true);
+          console.log("🎮 Rejoint automatiquement la partie");
+        }
       }, 200);
     }
   }, [isAuthenticated, user, isConnected, hasJoinedGame]);
@@ -108,8 +116,18 @@ function GamePage() {
       }
     };
 
+    const handleBeforeUnload = () => {
+      // Fermer la connexion Socket.IO quand l'utilisateur quitte la page
+      socket.disconnect();
+    };
+
     document.addEventListener('visibilitychange', handleVisibilityChange);
-    return () => document.removeEventListener('visibilitychange', handleVisibilityChange);
+    window.addEventListener('beforeunload', handleBeforeUnload);
+    
+    return () => {
+      document.removeEventListener('visibilitychange', handleVisibilityChange);
+      window.removeEventListener('beforeunload', handleBeforeUnload);
+    };
   }, [isAuthenticated, user, isConnected]);
 
   const buzz = () => {
@@ -125,6 +143,9 @@ function GamePage() {
   };
 
   const handleLogout = () => {
+    // Fermer explicitement la connexion Socket.IO
+    socket.disconnect();
+    
     localStorage.removeItem('token');
     localStorage.removeItem('user');
     localStorage.removeItem('gameState');
@@ -133,10 +154,15 @@ function GamePage() {
     setHasJoined(false);
     setBuzzedPlayer(null);
     setPlayers([]);
-    navigate('/');
+    
+    // Forcer un refresh de la page pour s'assurer que la déconnexion est bien détectée
+    window.location.href = '/';
   };
 
   const returnToHome = () => {
+    // Fermer explicitement la connexion Socket.IO
+    socket.disconnect();
+    
     setHasJoined(false);
     setBuzzedPlayer(null);
     setPlayers([]);
@@ -163,26 +189,50 @@ function GamePage() {
 
       {isAuthenticated && user ? (
         <div className="game-section">
-          <div className="buzzer-section">
-            <h2>Votre Buzzer</h2>
-            <button 
-              onClick={buzz}
-              disabled={!isConnected || buzzedPlayer}
-              className={`buzzer-button ${buzzedPlayer ? 'disabled' : ''}`}
-            >
-              🔔 BUZZER
-            </button>
-            {buzzedPlayer && (
-              <div className="buzzed-info">
-                <p className="buzzed-player">
-                  🎉 {buzzedPlayer.name} a buzzé !
-                </p>
-                <button onClick={resetBuzzer} className="reset-button">
-                  🔄 Reset
-                </button>
-              </div>
-            )}
-          </div>
+          {user.role === 'admin' ? (
+            <div className="admin-section">
+              <h2>👑 Mode Administrateur</h2>
+              <p className="admin-info">Vous êtes en mode administrateur. Vous ne participez pas au jeu mais pouvez gérer le buzzer.</p>
+              {buzzedPlayer && (
+                <div className="buzzed-info">
+                  <p className="buzzed-player">
+                    🎉 {buzzedPlayer.name} a buzzé !
+                  </p>
+                  <button onClick={resetBuzzer} className="reset-button admin-reset">
+                    🔄 Reset Buzzer
+                  </button>
+                </div>
+              )}
+              {!buzzedPlayer && (
+                <div className="waiting-info">
+                  <p>⏳ En attente qu'un joueur buzz...</p>
+                </div>
+              )}
+            </div>
+          ) : (
+            <div className="buzzer-section">
+              <h2>Votre Buzzer</h2>
+              <button 
+                onClick={buzz}
+                disabled={!isConnected || buzzedPlayer}
+                className={`buzzer-button ${buzzedPlayer ? 'disabled' : ''}`}
+              >
+                🔔 BUZZER
+              </button>
+              {buzzedPlayer && (
+                <div className="buzzed-info">
+                  <p className="buzzed-player">
+                    🎉 {buzzedPlayer.name} a buzzé !
+                  </p>
+                  {user.role === 'admin' && (
+                    <button onClick={resetBuzzer} className="reset-button">
+                      🔄 Reset
+                    </button>
+                  )}
+                </div>
+              )}
+            </div>
+          )}
 
           <div className="players-section">
             <h2>Joueurs en ligne ({players.length})</h2>

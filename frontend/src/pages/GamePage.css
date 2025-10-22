@@ -167,6 +167,42 @@
   border: 2px solid rgba(255, 255, 255, 0.2);
 }
 
+/* Section administrateur */
+.admin-section {
+  background: rgba(255, 215, 0, 0.1);
+  padding: 30px;
+  border-radius: 15px;
+  text-align: center;
+  border: 2px solid #ffd700;
+}
+
+.admin-info {
+  color: #ffd700;
+  font-weight: bold;
+  margin-bottom: 20px;
+  font-family: 'Orbitron', monospace;
+  font-size: 1.1rem;
+}
+
+.admin-reset {
+  background: #ffd700 !important;
+  color: #000 !important;
+  font-weight: 900;
+}
+
+.admin-reset:hover {
+  background: #000 !important;
+  color: #ffd700 !important;
+  box-shadow: 0 0 15px rgba(255, 215, 0, 0.5);
+}
+
+.waiting-info {
+  color: #666;
+  font-style: italic;
+  margin-top: 20px;
+  font-family: 'Orbitron', monospace;
+}
+
 .buzzer-section h2 {
   font-size: 1.8rem;
   margin-bottom: 30px;
