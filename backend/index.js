@@ -4,6 +4,7 @@ const cors = require('cors');
 const dotenv = require('dotenv');
 const { Server } = require('socket.io');
 const http = require('http');
+const { testConnection, createUsersTable } = require('./config/database');
 
 // Charger les variables d'environnement
 dotenv.config();
@@ -24,6 +25,10 @@ const io = new Server(server, {
 app.use(cors());
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
+
+// Routes d'authentification
+const authRoutes = require('./routes/auth');
+app.use('/api/auth', authRoutes);
 
 // Route de base
 app.get('/', (req, res) => {
@@ -131,12 +136,36 @@ io.on('connection', (socket) => {
   });
 });
 
-// Démarrer le serveur
-server.listen(PORT, () => {
-  console.log(`Serveur DEV BATTLE ARENA démarré sur le port ${PORT}`);
-  console.log(`URL: http://localhost:${PORT}`);
-  console.log(`Environnement: ${process.env.NODE_ENV || 'development'}`);
-  console.log(`Système DEV BATTLE ARENA prêt !`);
-});
+// Initialiser la base de données et démarrer le serveur
+async function startServer() {
+  try {
+    // Tester la connexion à la base de données
+    const dbConnected = await testConnection();
+    if (!dbConnected) {
+      console.error('❌ Impossible de se connecter à la base de données');
+      process.exit(1);
+    }
+
+    // Créer la table users si elle n'existe pas
+    const tableCreated = await createUsersTable();
+    if (!tableCreated) {
+      console.error('❌ Impossible de créer la table users');
+      process.exit(1);
+    }
+
+    // Démarrer le serveur
+    server.listen(PORT, () => {
+      console.log(`Serveur DEV BATTLE ARENA démarré sur le port ${PORT}`);
+      console.log(`URL: http://localhost:${PORT}`);
+      console.log(`Environnement: ${process.env.NODE_ENV || 'development'}`);
+      console.log(`Système DEV BATTLE ARENA prêt !`);
+    });
+  } catch (error) {
+    console.error('❌ Erreur lors du démarrage du serveur:', error);
+    process.exit(1);
+  }
+}
+
+startServer();
 
 module.exports = app;

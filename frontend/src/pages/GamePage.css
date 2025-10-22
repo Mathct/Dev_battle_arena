@@ -1,0 +1,409 @@
+/* Styles pour le système de buzzer Battle Arena */
+.buzzer-container {
+  max-width: 1000px;
+  margin: 0 auto;
+  padding: 20px;
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  border-radius: 15px;
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
+  color: white;
+  font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+  min-height: 80vh;
+}
+
+.buzzer-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 30px;
+  padding-bottom: 20px;
+  border-bottom: 2px solid rgba(255, 255, 255, 0.2);
+}
+
+.header-controls {
+  display: flex;
+  align-items: center;
+  gap: 20px;
+  flex-wrap: wrap;
+}
+
+.user-info {
+  display: flex;
+  align-items: center;
+  gap: 15px;
+  background: rgba(255, 255, 255, 0.1);
+  padding: 8px 15px;
+  border-radius: 20px;
+  border: 2px solid rgba(255, 255, 255, 0.2);
+}
+
+.user-name {
+  font-weight: bold;
+  color: #f39c12;
+}
+
+.logout-button {
+  padding: 5px 12px;
+  background: transparent;
+  border: 1px solid #e74c3c;
+  color: #e74c3c;
+  border-radius: 15px;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  font-size: 0.9rem;
+  font-family: 'Courier New', monospace;
+}
+
+.logout-button:hover {
+  background: #e74c3c;
+  color: white;
+  box-shadow: 0 0 10px rgba(231, 76, 60, 0.3);
+}
+
+.home-button {
+  padding: 8px 16px;
+  background: transparent;
+  border: 2px solid #ff0000;
+  color: #ff0000;
+  border-radius: 20px;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  font-family: 'Courier New', monospace;
+  font-weight: bold;
+}
+
+.home-button:hover {
+  background: #ff0000;
+  color: #000;
+  box-shadow: 0 0 15px rgba(255, 0, 0, 0.5);
+}
+
+.buzzer-header h1 {
+  margin: 0;
+  font-size: 2.5rem;
+  text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.3);
+}
+
+.connection-status {
+  display: flex;
+  align-items: center;
+}
+
+.status-indicator {
+  padding: 8px 16px;
+  border-radius: 20px;
+  font-weight: bold;
+  font-size: 0.9rem;
+  transition: all 0.3s ease;
+}
+
+.status-indicator.connected {
+  background: rgba(46, 204, 113, 0.2);
+  border: 2px solid #2ecc71;
+  color: #2ecc71;
+}
+
+.status-indicator.disconnected {
+  background: rgba(231, 76, 60, 0.2);
+  border: 2px solid #e74c3c;
+  color: #e74c3c;
+}
+
+/* Section de connexion */
+.join-section {
+  text-align: center;
+  padding: 40px 20px;
+}
+
+.join-section h2 {
+  font-size: 2rem;
+  margin-bottom: 30px;
+  color: #f39c12;
+}
+
+.join-form {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+  max-width: 400px;
+  margin: 0 auto;
+}
+
+.welcome-message {
+  font-size: 1.2rem;
+  margin-bottom: 20px;
+  color: #f39c12;
+  text-align: center;
+}
+
+.auth-required {
+  text-align: center;
+  padding: 20px;
+  background: rgba(231, 76, 60, 0.1);
+  border: 2px solid #e74c3c;
+  border-radius: 10px;
+  margin: 20px 0;
+}
+
+.auth-required p {
+  font-size: 1.1rem;
+  margin-bottom: 20px;
+  color: #e74c3c;
+}
+
+.auth-button {
+  padding: 12px 25px;
+  background: linear-gradient(45deg, #e74c3c, #c0392b);
+  border: none;
+  border-radius: 25px;
+  color: white;
+  font-weight: bold;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  font-size: 1.1rem;
+  font-family: 'Courier New', monospace;
+}
+
+.auth-button:hover {
+  background: linear-gradient(45deg, #c0392b, #a93226);
+  transform: translateY(-2px);
+  box-shadow: 0 5px 15px rgba(231, 76, 60, 0.4);
+}
+
+.join-button {
+  padding: 15px 30px;
+  background: linear-gradient(45deg, #f39c12, #e67e22);
+  border: none;
+  border-radius: 25px;
+  color: white;
+  font-weight: bold;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  font-size: 1.2rem;
+}
+
+.join-button:hover:not(:disabled) {
+  background: linear-gradient(45deg, #e67e22, #d35400);
+  transform: translateY(-3px);
+  box-shadow: 0 8px 20px rgba(243, 156, 18, 0.4);
+}
+
+.join-button:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+  transform: none;
+  box-shadow: none;
+}
+
+/* Section de jeu */
+.game-section {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 30px;
+  margin-top: 20px;
+}
+
+.buzzer-section {
+  background: rgba(255, 255, 255, 0.1);
+  padding: 30px;
+  border-radius: 15px;
+  text-align: center;
+  border: 2px solid rgba(255, 255, 255, 0.2);
+}
+
+.buzzer-section h2 {
+  font-size: 1.8rem;
+  margin-bottom: 30px;
+  color: #e74c3c;
+}
+
+.buzzer-button {
+  width: 200px;
+  height: 200px;
+  border-radius: 50%;
+  border: none;
+  background: linear-gradient(45deg, #e74c3c, #c0392b);
+  color: white;
+  font-size: 1.5rem;
+  font-weight: bold;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  box-shadow: 0 10px 30px rgba(231, 76, 60, 0.3);
+  margin-bottom: 20px;
+}
+
+.buzzer-button:hover:not(:disabled) {
+  background: linear-gradient(45deg, #c0392b, #a93226);
+  transform: scale(1.05);
+  box-shadow: 0 15px 40px rgba(231, 76, 60, 0.5);
+}
+
+.buzzer-button:active:not(:disabled) {
+  transform: scale(0.95);
+}
+
+.buzzer-button.disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+  transform: none;
+  box-shadow: 0 5px 15px rgba(231, 76, 60, 0.2);
+}
+
+.buzzed-info {
+  background: rgba(46, 204, 113, 0.2);
+  padding: 20px;
+  border-radius: 10px;
+  border: 2px solid #2ecc71;
+}
+
+.buzzed-player {
+  font-size: 1.3rem;
+  font-weight: bold;
+  margin-bottom: 15px;
+  color: #2ecc71;
+}
+
+.reset-button {
+  padding: 10px 20px;
+  background: linear-gradient(45deg, #2ecc71, #27ae60);
+  border: none;
+  border-radius: 20px;
+  color: white;
+  font-weight: bold;
+  cursor: pointer;
+  transition: all 0.3s ease;
+}
+
+.reset-button:hover {
+  background: linear-gradient(45deg, #27ae60, #229954);
+  transform: translateY(-2px);
+  box-shadow: 0 5px 15px rgba(46, 204, 113, 0.4);
+}
+
+/* Section des joueurs */
+.players-section {
+  background: rgba(255, 255, 255, 0.1);
+  padding: 30px;
+  border-radius: 15px;
+  border: 2px solid rgba(255, 255, 255, 0.2);
+}
+
+.players-section h2 {
+  font-size: 1.8rem;
+  margin-bottom: 20px;
+  color: #3498db;
+  text-align: center;
+}
+
+.players-list {
+  max-height: 400px;
+  overflow-y: auto;
+}
+
+.players-list::-webkit-scrollbar {
+  width: 8px;
+}
+
+.players-list::-webkit-scrollbar-track {
+  background: rgba(255, 255, 255, 0.1);
+  border-radius: 4px;
+}
+
+.players-list::-webkit-scrollbar-thumb {
+  background: rgba(255, 255, 255, 0.3);
+  border-radius: 4px;
+}
+
+.player-item {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 15px;
+  margin-bottom: 10px;
+  background: rgba(255, 255, 255, 0.1);
+  border-radius: 10px;
+  border-left: 4px solid #3498db;
+  transition: all 0.3s ease;
+}
+
+.player-item:hover {
+  background: rgba(255, 255, 255, 0.15);
+  transform: translateX(5px);
+}
+
+.player-item.buzzed {
+  background: rgba(46, 204, 113, 0.2);
+  border-left-color: #2ecc71;
+  animation: pulse 1s infinite;
+}
+
+@keyframes pulse {
+  0% { transform: scale(1); }
+  50% { transform: scale(1.02); }
+  100% { transform: scale(1); }
+}
+
+.player-name {
+  font-weight: bold;
+  font-size: 1.1rem;
+}
+
+.buzzed-indicator {
+  font-size: 1.5rem;
+  animation: bounce 0.5s infinite alternate;
+}
+
+@keyframes bounce {
+  0% { transform: translateY(0); }
+  100% { transform: translateY(-5px); }
+}
+
+/* Responsive design */
+@media (max-width: 768px) {
+  .buzzer-container {
+    margin: 10px;
+    padding: 15px;
+  }
+  
+  .buzzer-header {
+    flex-direction: column;
+    gap: 15px;
+    text-align: center;
+  }
+  
+  .buzzer-header h1 {
+    font-size: 2rem;
+  }
+  
+  .game-section {
+    grid-template-columns: 1fr;
+    gap: 20px;
+  }
+  
+  .buzzer-button {
+    width: 150px;
+    height: 150px;
+    font-size: 1.2rem;
+  }
+  
+  .join-form {
+    max-width: 100%;
+  }
+  
+  .players-list {
+    max-height: 300px;
+  }
+}
+
+@media (max-width: 480px) {
+  .buzzer-button {
+    width: 120px;
+    height: 120px;
+    font-size: 1rem;
+  }
+  
+  .buzzer-section h2,
+  .players-section h2 {
+    font-size: 1.5rem;
+  }
+}
