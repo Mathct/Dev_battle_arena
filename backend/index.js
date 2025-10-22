@@ -58,8 +58,8 @@ let buzzedPlayer = null;
 
 // Gestion des connexions Socket.IO
 io.on('connection', (socket) => {
-  console.log(`👤 Utilisateur connecté: ${socket.id}`);
-  console.log(`📊 Total utilisateurs connectés: ${io.engine.clientsCount}`);
+  console.log(`Utilisateur connecté: ${socket.id}`);
+  console.log(`Total utilisateurs connectés: ${io.engine.clientsCount}`);
   
   // Rejoindre le jeu
   socket.on('joinGame', (playerName) => {
@@ -78,7 +78,7 @@ io.on('connection', (socket) => {
   // Buzzer
   socket.on('buzz', () => {
     if (buzzedPlayer) {
-      console.log(`🔔 Tentative de buzzer mais ${buzzedPlayer.name} a déjà buzzé`);
+      console.log(`Tentative de buzzer mais ${buzzedPlayer.name} a déjà buzzé`);
       return;
     }
 
@@ -88,7 +88,7 @@ io.on('connection', (socket) => {
       player.buzzed = true;
       players.set(socket.id, player);
       
-      console.log(`🔔 ${player.name} a buzzé !`);
+      console.log(`${player.name} a buzzé !`);
       
       // Notifier tous les clients
       io.emit('playerBuzzed', player);
@@ -105,7 +105,7 @@ io.on('connection', (socket) => {
       players.set(player.id, player);
     });
     
-    console.log(`🔄 Buzzer reset`);
+    console.log(`Buzzer reset`);
     io.emit('buzzerReset');
     io.emit('playersUpdate', Array.from(players.values()));
   });
@@ -114,7 +114,7 @@ io.on('connection', (socket) => {
   socket.on('disconnect', () => {
     const player = players.get(socket.id);
     if (player) {
-      console.log(`👋 ${player.name} a quitté le jeu`);
+      console.log(`${player.name} a quitté le jeu`);
       players.delete(socket.id);
       
       // Si le joueur qui a buzzé se déconnecte, reset
@@ -127,16 +127,16 @@ io.on('connection', (socket) => {
       io.emit('playersUpdate', Array.from(players.values()));
     }
     
-    console.log(`📊 Total utilisateurs connectés: ${io.engine.clientsCount}`);
+    console.log(`Total utilisateurs connectés: ${io.engine.clientsCount}`);
   });
 });
 
 // Démarrer le serveur
 server.listen(PORT, () => {
-  console.log(`🚀 Serveur DEV BATTLE ARENA démarré sur le port ${PORT}`);
-  console.log(`📍 URL: http://localhost:${PORT}`);
-  console.log(`🔧 Environnement: ${process.env.NODE_ENV || 'development'}`);
-  console.log(`🎯 Système DEV BATTLE ARENA prêt !`);
+  console.log(`Serveur DEV BATTLE ARENA démarré sur le port ${PORT}`);
+  console.log(`URL: http://localhost:${PORT}`);
+  console.log(`Environnement: ${process.env.NODE_ENV || 'development'}`);
+  console.log(`Système DEV BATTLE ARENA prêt !`);
 });
 
 module.exports = app;
