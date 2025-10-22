@@ -1,0 +1,147 @@
+/* Header pour DEV BATTLE ARENA */
+.game-header {
+  background: #000;
+  padding: 8px 20px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  position: sticky;
+  top: 0;
+  z-index: 100;
+}
+
+.header-left {
+  display: flex;
+  align-items: center;
+  gap: 15px;
+}
+
+.header-logo {
+  height: 120px;
+  width: auto;
+  cursor: pointer;
+}
+
+/* Titre supprimé */
+
+.header-right {
+  display: flex;
+  align-items: center;
+}
+
+.header-controls {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 20px;
+}
+
+.connection-status {
+  display: flex;
+  align-items: center;
+}
+
+.status-indicator {
+  padding: 8px 12px 4px 12px;
+  border-radius: 15px;
+  font-weight: 900;
+  font-size: 0.7rem;
+  font-family: 'Orbitron', monospace;
+  letter-spacing: 1px;
+  text-transform: uppercase;
+  vertical-align: middle;
+  line-height: 1;
+}
+
+.status-indicator.connected {
+  background: rgba(46, 204, 113, 0.2);
+  border: 1px solid #2ecc71;
+  color: #2ecc71;
+}
+
+.status-indicator.disconnected {
+  background: rgba(231, 76, 60, 0.2);
+  border: 1px solid #e74c3c;
+  color: #e74c3c;
+}
+
+.user-section {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.user-name {
+  color: var(--arcade-red);
+  font-family: 'Orbitron', monospace;
+  font-weight: 700;
+  font-size: 0.8rem;
+  letter-spacing: 1px;
+}
+
+.header-btn {
+  padding: 6px 12px;
+  background: var(--arcade-red);
+  border: none;
+  border-radius: 15px;
+  color: #000;
+  cursor: pointer;
+  font-family: 'Orbitron', monospace;
+  font-weight: 900;
+  font-size: 0.7rem;
+  letter-spacing: 1px;
+  text-transform: uppercase;
+  transition: none;
+  text-shadow: 1px 1px 0px rgba(0, 0, 0, 0.3);
+}
+
+.header-btn:hover {
+  background: #000;
+  color: var(--arcade-red);
+  box-shadow: 0 0 10px var(--arcade-glow);
+}
+
+.logout-btn {
+  background: #e74c3c;
+}
+
+.logout-btn:hover {
+  background: #000;
+  color: #e74c3c;
+  box-shadow: 0 0 10px rgba(231, 76, 60, 0.5);
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+  .game-header {
+    padding: 8px 15px;
+    flex-direction: column;
+    gap: 10px;
+  }
+  
+  .header-left {
+    justify-content: center;
+  }
+  
+  .header-logo {
+    height: 80px;
+  }
+  
+  .header-controls {
+    flex-direction: column;
+    gap: 20px;
+  }
+  
+  .user-section {
+    flex-direction: column;
+    gap: 8px;
+  }
+}
+
+@media (max-width: 480px) {
+  /* Titre supprimé */
+  
+  .header-logo {
+    height: 70px;
+  }
+}

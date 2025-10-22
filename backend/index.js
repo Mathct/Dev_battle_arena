@@ -4,7 +4,7 @@ const cors = require('cors');
 const dotenv = require('dotenv');
 const { Server } = require('socket.io');
 const http = require('http');
-const { testConnection, createUsersTable } = require('./config/database');
+const { createDatabase, testConnection, createUsersTable } = require('./config/database');
 
 // Charger les variables d'environnement
 dotenv.config();
@@ -57,7 +57,7 @@ app.get('/api/data', (req, res) => {
   });
 });
 
-// Stockage des joueurs connectés
+// Stockage des joueurs connectés (clé = nom d'utilisateur)
 const players = new Map();
 let buzzedPlayer = null;
 
@@ -68,13 +68,20 @@ io.on('connection', (socket) => {
   
   // Rejoindre le jeu
   socket.on('joinGame', (playerName) => {
+    // Utiliser le nom d'utilisateur comme clé unique
     const player = {
       id: socket.id,
       name: playerName,
       buzzed: false
     };
-    players.set(socket.id, player);
-    console.log(`🎮 ${playerName} a rejoint le jeu`);
+    
+    if (players.has(playerName)) {
+      console.log(`🔄 ${playerName} s'est reconnecté (remplacement)`);
+    } else {
+      console.log(`🎮 ${playerName} a rejoint le jeu`);
+    }
+    
+    players.set(playerName, player);
     
     // Notifier tous les clients de la mise à jour des joueurs
     io.emit('playersUpdate', Array.from(players.values()));
@@ -87,17 +94,20 @@ io.on('connection', (socket) => {
       return;
     }
 
-    const player = players.get(socket.id);
-    if (player) {
+    // Trouver le joueur par socket.id
+    const player = Array.from(players.values()).find(p => p.id === socket.id);
+    if (player && !player.buzzed) {
       buzzedPlayer = player;
       player.buzzed = true;
-      players.set(socket.id, player);
+      players.set(player.name, player);
       
       console.log(`${player.name} a buzzé !`);
       
       // Notifier tous les clients
       io.emit('playerBuzzed', player);
       io.emit('playersUpdate', Array.from(players.values()));
+    } else if (player && player.buzzed) {
+      console.log(`${player.name} a déjà buzzé dans cette manche`);
     }
   });
 
@@ -107,7 +117,7 @@ io.on('connection', (socket) => {
     // Reset tous les joueurs
     players.forEach((player) => {
       player.buzzed = false;
-      players.set(player.id, player);
+      players.set(player.name, player);
     });
     
     console.log(`Buzzer reset`);
@@ -117,10 +127,11 @@ io.on('connection', (socket) => {
 
   // Gérer la déconnexion
   socket.on('disconnect', () => {
-    const player = players.get(socket.id);
+    // Trouver le joueur par socket.id
+    const player = Array.from(players.values()).find(p => p.id === socket.id);
     if (player) {
       console.log(`${player.name} a quitté le jeu`);
-      players.delete(socket.id);
+      players.delete(player.name);
       
       // Si le joueur qui a buzzé se déconnecte, reset
       if (buzzedPlayer && buzzedPlayer.id === socket.id) {
@@ -139,6 +150,13 @@ io.on('connection', (socket) => {
 // Initialiser la base de données et démarrer le serveur
 async function startServer() {
   try {
+    // Créer la base de données si elle n'existe pas
+    const dbCreated = await createDatabase();
+    if (!dbCreated) {
+      console.error('❌ Impossible de créer la base de données');
+      process.exit(1);
+    }
+
     // Tester la connexion à la base de données
     const dbConnected = await testConnection();
     if (!dbConnected) {

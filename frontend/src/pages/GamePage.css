@@ -1,31 +1,27 @@
 /* Styles pour le système de buzzer Battle Arena */
-.buzzer-container {
-  max-width: 1000px;
-  margin: 0 auto;
+.game-main-content {
+  min-height: calc(100vh - 140px); /* Hauteur totale moins header et footer */
   padding: 20px;
   background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-  border-radius: 15px;
-  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
   color: white;
   font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-  min-height: 80vh;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
 }
 
-.buzzer-header {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  margin-bottom: 30px;
-  padding-bottom: 20px;
-  border-bottom: 2px solid rgba(255, 255, 255, 0.2);
+.buzzer-container {
+  max-width: 1000px;
+  width: 100%;
+  background: rgba(255, 255, 255, 0.1);
+  border-radius: 15px;
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
+  padding: 30px;
+  backdrop-filter: blur(10px);
+  border: 1px solid rgba(255, 255, 255, 0.2);
 }
 
-.header-controls {
-  display: flex;
-  align-items: center;
-  gap: 20px;
-  flex-wrap: wrap;
-}
+
 
 .user-info {
   display: flex;
@@ -42,23 +38,6 @@
   color: #f39c12;
 }
 
-.logout-button {
-  padding: 5px 12px;
-  background: transparent;
-  border: 1px solid #e74c3c;
-  color: #e74c3c;
-  border-radius: 15px;
-  cursor: pointer;
-  transition: all 0.3s ease;
-  font-size: 0.9rem;
-  font-family: 'Courier New', monospace;
-}
-
-.logout-button:hover {
-  background: #e74c3c;
-  color: white;
-  box-shadow: 0 0 10px rgba(231, 76, 60, 0.3);
-}
 
 .home-button {
   padding: 8px 16px;
@@ -84,30 +63,7 @@
   text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.3);
 }
 
-.connection-status {
-  display: flex;
-  align-items: center;
-}
 
-.status-indicator {
-  padding: 8px 16px;
-  border-radius: 20px;
-  font-weight: bold;
-  font-size: 0.9rem;
-  transition: all 0.3s ease;
-}
-
-.status-indicator.connected {
-  background: rgba(46, 204, 113, 0.2);
-  border: 2px solid #2ecc71;
-  color: #2ecc71;
-}
-
-.status-indicator.disconnected {
-  background: rgba(231, 76, 60, 0.2);
-  border: 2px solid #e74c3c;
-  color: #e74c3c;
-}
 
 /* Section de connexion */
 .join-section {
@@ -327,14 +283,14 @@
 }
 
 .player-item:hover {
-  background: rgba(255, 255, 255, 0.15);
-  transform: translateX(5px);
+  background: rgba(255, 255, 255, 0.2);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+  border-left-color: #5dade2;
 }
 
 .player-item.buzzed {
   background: rgba(46, 204, 113, 0.2);
   border-left-color: #2ecc71;
-  animation: pulse 1s infinite;
 }
 
 @keyframes pulse {

@@ -12,8 +12,37 @@ const dbConfig = {
   queueLimit: 0
 };
 
+// Configuration sans base de données spécifique pour créer la DB
+const dbConfigWithoutDB = {
+  host: process.env.DB_HOST || 'localhost',
+  user: process.env.DB_USER || 'root',
+  password: process.env.DB_PASSWORD || '',
+  waitForConnections: true,
+  connectionLimit: 10,
+  queueLimit: 0
+};
+
 // Créer le pool de connexions
 const pool = mysql.createPool(dbConfig);
+
+// Fonction pour créer la base de données si elle n'existe pas
+async function createDatabase() {
+  try {
+    const tempPool = mysql.createPool(dbConfigWithoutDB);
+    const connection = await tempPool.getConnection();
+    
+    const dbName = process.env.DB_NAME || 'dev_battle_arena';
+    await connection.execute(`CREATE DATABASE IF NOT EXISTS \`${dbName}\` CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci`);
+    
+    console.log(`✅ Base de données '${dbName}' créée ou vérifiée avec succès`);
+    connection.release();
+    await tempPool.end();
+    return true;
+  } catch (error) {
+    console.error('❌ Erreur lors de la création de la base de données:', error.message);
+    return false;
+  }
+}
 
 // Fonction pour tester la connexion
 async function testConnection() {
@@ -56,6 +85,7 @@ async function createUsersTable() {
 
 module.exports = {
   pool,
+  createDatabase,
   testConnection,
   createUsersTable
 };

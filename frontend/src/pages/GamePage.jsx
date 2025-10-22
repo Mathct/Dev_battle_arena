@@ -3,6 +3,8 @@ import { useNavigate } from "react-router";
 import io from "socket.io-client";
 import useAutoLogout from "../hooks/useAutoLogout";
 import AutoLogoutWarning from "../components/AutoLogoutWarning";
+import Header from "../components/Header";
+import Footer from "../components/Footer";
 import "./GamePage.css";
 
 const socket = io("http://localhost:3000");
@@ -12,9 +14,10 @@ function GamePage() {
   const [isConnected, setIsConnected] = useState(false);
   const [players, setPlayers] = useState([]);
   const [buzzedPlayer, setBuzzedPlayer] = useState(null);
-  const [hasJoined, setHasJoined] = useState(false);
+  const [hasJoined, setHasJoined] = useState(true);
   const [user, setUser] = useState(null);
   const [isAuthenticated, setIsAuthenticated] = useState(false);
+  const [hasJoinedGame, setHasJoinedGame] = useState(false);
   
   // Hook de déconnexion automatique (30 minutes d'inactivité, avertissement à 25 minutes)
   const { showWarning, warningCountdown, handleStayConnected, handleLogoutNow } = useAutoLogout(30, 5);
@@ -31,13 +34,7 @@ function GamePage() {
         setUser(parsedUser);
         setIsAuthenticated(true);
         
-        // Restaurer l'état du jeu si l'utilisateur était en jeu
-        if (gameState) {
-          const parsedGameState = JSON.parse(gameState);
-          if (parsedGameState.hasJoined) {
-            setHasJoined(true);
-          }
-        }
+        // L'utilisateur est automatiquement dans la partie
       } catch (error) {
         console.error('Erreur lors du parsing des données utilisateur:', error);
         localStorage.removeItem('token');
@@ -66,6 +63,7 @@ function GamePage() {
 
     // Gestion des joueurs en ligne
     socket.on("playersUpdate", (playersList) => {
+      console.log("📋 Liste des joueurs reçue:", playersList);
       setPlayers(playersList);
     });
 
@@ -89,21 +87,33 @@ function GamePage() {
     };
   }, [navigate]);
 
-  const joinGame = () => {
-    if (isAuthenticated && user && isConnected) {
-      socket.emit("joinGame", user.username);
-      setHasJoined(true);
-      
-      // Sauvegarder l'état du jeu
-      localStorage.setItem('gameState', JSON.stringify({
-        hasJoined: true,
-        username: user.username
-      }));
+  // Rejoindre automatiquement quand l'utilisateur est défini et connecté
+  useEffect(() => {
+    if (isAuthenticated && user && isConnected && !hasJoinedGame) {
+      // Petit délai pour s'assurer que la connexion est stable
+      setTimeout(() => {
+        socket.emit('joinGame', user.username);
+        setHasJoinedGame(true);
+        console.log("🎮 Rejoint automatiquement la partie");
+      }, 200);
     }
-  };
+  }, [isAuthenticated, user, isConnected, hasJoinedGame]);
+
+  // Éviter les reconnexions multiples
+  useEffect(() => {
+    const handleVisibilityChange = () => {
+      if (document.visibilityState === 'visible' && isAuthenticated && user && isConnected) {
+        // Ne pas rejoindre automatiquement si on revient sur l'onglet
+        console.log("👁️ Onglet visible - pas de reconnexion");
+      }
+    };
+
+    document.addEventListener('visibilitychange', handleVisibilityChange);
+    return () => document.removeEventListener('visibilitychange', handleVisibilityChange);
+  }, [isAuthenticated, user, isConnected]);
 
   const buzz = () => {
-    if (isConnected && hasJoined) {
+    if (isConnected) {
       socket.emit("buzz");
     }
   };
@@ -143,55 +153,15 @@ function GamePage() {
         onCancel={handleStayConnected}
         remainingTime={warningCountdown}
       />
-      <div className="buzzer-container">
-        <div className="buzzer-header">
-        <h1>🎯 DEV BATTLE ARENA</h1>
-        <div className="header-controls">
-          <button onClick={returnToHome} className="home-button">
-            🏠 Accueil
-          </button>
-          {isAuthenticated && user && (
-            <div className="user-info">
-              <span className="user-name">👤 {user.username}</span>
-              <button onClick={handleLogout} className="logout-button">
-                🚪 Déconnexion
-              </button>
-            </div>
-          )}
-          <div className="connection-status">
-            <span className={`status-indicator ${isConnected ? 'connected' : 'disconnected'}`}>
-              {isConnected ? '🟢 Connecté' : '🔴 Déconnecté'}
-            </span>
-          </div>
-        </div>
-      </div>
+      <Header 
+        user={user}
+        onLogout={handleLogout}
+        onReturnHome={returnToHome}
+        isConnected={isConnected}
+      />
+      <div className="game-main-content">
 
-      {!hasJoined ? (
-        <div className="join-section">
-          <h2>Rejoindre la partie</h2>
-          {isAuthenticated && user ? (
-            <div className="join-form">
-              <p className="welcome-message">
-                Bienvenue, <strong>{user.username}</strong> !
-              </p>
-              <button 
-                onClick={joinGame}
-                disabled={!isConnected}
-                className="join-button"
-              >
-                🎮 Rejoindre la partie
-              </button>
-            </div>
-          ) : (
-            <div className="auth-required">
-              <p>Vous devez être connecté pour rejoindre la partie.</p>
-              <button onClick={returnToHome} className="auth-button">
-                🔐 Se connecter
-              </button>
-            </div>
-          )}
-        </div>
-      ) : (
+      {isAuthenticated && user ? (
         <div className="game-section">
           <div className="buzzer-section">
             <h2>Votre Buzzer</h2>
@@ -217,9 +187,17 @@ function GamePage() {
           <div className="players-section">
             <h2>Joueurs en ligne ({players.length})</h2>
             <div className="players-list">
-              {players.map((player) => (
+              {players
+                .filter(player => 
+                  player && 
+                  player.name && 
+                  typeof player.name === 'string' && 
+                  player.name.trim() !== '' &&
+                  player.name.trim().length > 0
+                )
+                .map((player) => (
                 <div 
-                  key={player.id} 
+                  key={player.id || player.name} 
                   className={`player-item ${player.buzzed ? 'buzzed' : ''}`}
                 >
                   <span className="player-name">{player.name}</span>
@@ -229,8 +207,16 @@ function GamePage() {
             </div>
           </div>
         </div>
+      ) : (
+        <div className="auth-required">
+          <p>Vous devez être connecté pour accéder au jeu.</p>
+          <button onClick={returnToHome} className="auth-button">
+            🔐 Se connecter
+          </button>
+        </div>
       )}
       </div>
+      <Footer />
     </>
   );
 }
