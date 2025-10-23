@@ -23,7 +23,7 @@ function HomePage() {
     
     if (token && userData) {
       try {
-        const parsedUser = JSON.parse(userData);
+        JSON.parse(userData); // Vérifier que les données sont valides
         // Rediriger automatiquement l'utilisateur connecté
         navigate('/game');
       } catch (error) {

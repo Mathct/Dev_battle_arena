@@ -14,7 +14,6 @@ function GamePage() {
   const [isConnected, setIsConnected] = useState(false);
   const [players, setPlayers] = useState([]);
   const [buzzedPlayer, setBuzzedPlayer] = useState(null);
-  const [hasJoined, setHasJoined] = useState(true);
   const [user, setUser] = useState(null);
   const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [hasJoinedGame, setHasJoinedGame] = useState(false);
@@ -26,7 +25,6 @@ function GamePage() {
     // Vérifier l'authentification au chargement
     const token = localStorage.getItem('token');
     const userData = localStorage.getItem('user');
-    const gameState = localStorage.getItem('gameState');
     
     if (token && userData) {
       try {
@@ -151,7 +149,6 @@ function GamePage() {
     localStorage.removeItem('gameState');
     setUser(null);
     setIsAuthenticated(false);
-    setHasJoined(false);
     setBuzzedPlayer(null);
     setPlayers([]);
     
@@ -163,7 +160,6 @@ function GamePage() {
     // Fermer explicitement la connexion Socket.IO
     socket.disconnect();
     
-    setHasJoined(false);
     setBuzzedPlayer(null);
     setPlayers([]);
     // Nettoyer l'état du jeu du localStorage
