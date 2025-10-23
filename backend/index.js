@@ -74,6 +74,13 @@ io.on('connection', (socket) => {
       // Envoyer la liste actuelle des joueurs à l'admin
       const playersList = Array.from(players.values());
       socket.emit('playersUpdate', playersList);
+      
+      // Envoyer l'état actuel du buzzer à l'admin
+      if (buzzedPlayer) {
+        socket.emit('playerBuzzed', buzzedPlayer);
+        console.log(`📡 État du buzzer envoyé à l'admin: ${buzzedPlayer.name} a buzzé`);
+      }
+      
       console.log(`📡 Liste des joueurs envoyée à l'admin:`, playersList.map(p => p.name));
     } else {
       // Utiliser le nom d'utilisateur comme clé unique pour les joueurs normaux
@@ -86,6 +93,20 @@ io.on('connection', (socket) => {
       
       if (players.has(playerName)) {
         console.log(`🔄 ${playerName} s'est reconnecté (remplacement)`);
+        
+        // Récupérer l'ancien joueur pour préserver son état
+        const oldPlayer = players.get(playerName);
+        if (oldPlayer) {
+          player.buzzed = oldPlayer.buzzed; // Préserver l'état buzzed
+          console.log(`🔄 ${playerName} - état buzzed préservé: ${player.buzzed}`);
+          
+          // Si c'est le joueur qui a buzzé qui se reconnecte, mettre à jour buzzedPlayer global
+          if (buzzedPlayer && buzzedPlayer.name === playerName) {
+            buzzedPlayer.id = socket.id; // Mettre à jour le socket.id
+            buzzedPlayer.buzzed = true;
+            console.log(`🔄 Mise à jour du buzzedPlayer global pour ${playerName} avec nouveau socket.id: ${socket.id}`);
+          }
+        }
       } else {
         console.log(`🎮 ${playerName} a rejoint le jeu`);
       }
@@ -95,7 +116,21 @@ io.on('connection', (socket) => {
       // Notifier tous les clients de la mise à jour des joueurs
       const playersList = Array.from(players.values());
       io.emit('playersUpdate', playersList);
-      console.log(`📡 Liste des joueurs envoyée:`, playersList.map(p => p.name));
+      console.log(`📡 Liste des joueurs envoyée:`, playersList.map(p => ({ name: p.name, buzzed: p.buzzed })));
+      
+      // Si quelqu'un a buzzé, envoyer l'état à tous les joueurs
+      if (buzzedPlayer) {
+        io.emit('playerBuzzed', buzzedPlayer);
+        console.log(`📡 État du buzzer envoyé à tous les joueurs: ${buzzedPlayer.name} a buzzé`);
+        
+        // Si c'est le joueur qui a buzzé qui se reconnecte, forcer l'envoi de l'état
+        if (buzzedPlayer.name === playerName) {
+          setTimeout(() => {
+            io.emit('playerBuzzed', buzzedPlayer);
+            console.log(`📡 État du buzzer renvoyé après reconnexion de ${playerName}`);
+          }, 100);
+        }
+      }
     }
   });
 
@@ -115,13 +150,16 @@ io.on('connection', (socket) => {
       
       console.log(`${player.name} a buzzé !`);
       
-    // Notifier tous les clients
-    io.emit('playerBuzzed', player);
-    const playersList = Array.from(players.values());
-    io.emit('playersUpdate', playersList);
-    console.log(`📡 Liste des joueurs envoyée après buzzer:`, playersList.map(p => p.name));
+      // Notifier tous les clients
+      io.emit('playerBuzzed', player);
+      const playersList = Array.from(players.values());
+      io.emit('playersUpdate', playersList);
+      console.log(`📡 Liste des joueurs envoyée après buzzer:`, playersList.map(p => ({ name: p.name, buzzed: p.buzzed })));
     } else if (player && player.buzzed) {
       console.log(`${player.name} a déjà buzzé dans cette manche`);
+    } else {
+      console.log(`⚠️ Joueur non trouvé pour socket.id: ${socket.id}`);
+      console.log(`📋 Joueurs disponibles:`, Array.from(players.values()).map(p => ({ name: p.name, id: p.id })));
     }
   });
 
@@ -138,8 +176,10 @@ io.on('connection', (socket) => {
     io.emit('buzzerReset');
     const playersList = Array.from(players.values());
     io.emit('playersUpdate', playersList);
-    console.log(`📡 Liste des joueurs envoyée après reset:`, playersList.map(p => p.name));
+    console.log(`📡 Liste des joueurs envoyée après reset:`, playersList.map(p => ({ name: p.name, buzzed: p.buzzed })));
   });
+
+
 
   // Gérer la déconnexion
   socket.on('disconnect', () => {
@@ -149,20 +189,22 @@ io.on('connection', (socket) => {
     const player = Array.from(players.values()).find(p => p.id === socket.id);
     if (player) {
       console.log(`👋 ${player.name} a quitté le jeu`);
+      
+      // Si le joueur qui a buzzé se déconnecte, ne pas reset (il peut se reconnecter)
+      if (buzzedPlayer && buzzedPlayer.id === socket.id) {
+        console.log(`⚠️ Le joueur qui a buzzé (${buzzedPlayer.name}) s'est déconnecté - état préservé`);
+        // Ne pas supprimer le joueur de la liste s'il a buzzé
+        return;
+      }
+      
+      // Supprimer le joueur de la liste
       players.delete(player.name);
       console.log(`📋 Liste des joueurs après suppression:`, Array.from(players.values()).map(p => p.name));
-      
-      // Si le joueur qui a buzzé se déconnecte, reset
-      if (buzzedPlayer && buzzedPlayer.id === socket.id) {
-        buzzedPlayer = null;
-        console.log(`🔄 Reset du buzzer car le joueur qui a buzzé s'est déconnecté`);
-        io.emit('buzzerReset');
-      }
       
       // Mettre à jour la liste des joueurs
       const playersList = Array.from(players.values());
       io.emit('playersUpdate', playersList);
-      console.log(`📡 Liste des joueurs envoyée après déconnexion:`, playersList.map(p => p.name));
+      console.log(`📡 Liste des joueurs envoyée après déconnexion:`, playersList.map(p => ({ name: p.name, buzzed: p.buzzed })));
     } else {
       console.log(`⚠️ Aucun joueur trouvé avec l'ID socket: ${socket.id}`);
     }

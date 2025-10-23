@@ -13,7 +13,11 @@ function GamePage() {
   const navigate = useNavigate();
   const [isConnected, setIsConnected] = useState(false);
   const [players, setPlayers] = useState([]);
-  const [buzzedPlayer, setBuzzedPlayer] = useState(null);
+  const [buzzedPlayer, setBuzzedPlayer] = useState(() => {
+    // Récupérer l'état du buzzer depuis le localStorage au chargement
+    const savedBuzzedPlayer = localStorage.getItem('buzzedPlayer');
+    return savedBuzzedPlayer ? JSON.parse(savedBuzzedPlayer) : null;
+  });
   const [user, setUser] = useState(null);
   const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [hasJoinedGame, setHasJoinedGame] = useState(false);
@@ -63,17 +67,30 @@ function GamePage() {
     socket.on("playersUpdate", (playersList) => {
       console.log("📋 Liste des joueurs reçue:", playersList);
       setPlayers(playersList);
+      
+      // Vérifier si un joueur a buzzé dans la liste
+      const buzzedPlayerInList = playersList.find(player => player.buzzed);
+      if (buzzedPlayerInList) {
+        console.log("🔔 Joueur buzzé détecté dans la liste des joueurs:", buzzedPlayerInList);
+        setBuzzedPlayer(buzzedPlayerInList);
+        localStorage.setItem('buzzedPlayer', JSON.stringify(buzzedPlayerInList));
+      }
     });
 
     // Gestion du buzzer
     socket.on("playerBuzzed", (player) => {
       setBuzzedPlayer(player);
+      localStorage.setItem('buzzedPlayer', JSON.stringify(player));
+      console.log("🔔 État du buzzer reçu:", player);
     });
 
     // Reset du buzzer
     socket.on("buzzerReset", () => {
       setBuzzedPlayer(null);
+      localStorage.removeItem('buzzedPlayer');
+      console.log("🔄 Buzzer reset reçu");
     });
+
 
     // Nettoyage
     return () => {
@@ -105,6 +122,7 @@ function GamePage() {
     }
   }, [isAuthenticated, user, isConnected, hasJoinedGame]);
 
+
   // Éviter les reconnexions multiples
   useEffect(() => {
     const handleVisibilityChange = () => {
@@ -130,7 +148,10 @@ function GamePage() {
 
   const buzz = () => {
     if (isConnected) {
+      console.log("🔔 Tentative de buzzer...");
       socket.emit("buzz");
+    } else {
+      console.log("❌ Pas connecté au serveur");
     }
   };
 
