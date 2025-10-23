@@ -19,6 +19,33 @@
   box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
 }
 
+.admin-controls {
+  display: flex;
+  justify-content: center;
+  margin-bottom: 30px;
+}
+
+.teams-btn {
+  background: linear-gradient(45deg, #9b59b6, #8e44ad);
+  color: white;
+  border: none;
+  padding: 12px 24px;
+  border-radius: 8px;
+  font-family: 'Orbitron', monospace;
+  font-weight: bold;
+  font-size: 1rem;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  box-shadow: 0 4px 15px rgba(155, 89, 182, 0.3);
+}
+
+.teams-btn:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 6px 20px rgba(155, 89, 182, 0.4);
+}
+
 
 .buzzed-info {
   background: linear-gradient(135deg, #ff6b6b, #ee5a24);

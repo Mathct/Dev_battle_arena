@@ -177,6 +177,10 @@ function AdminPage() {
     navigate('/');
   };
 
+  const goToTeams = () => {
+    navigate('/teams');
+  };
+
 
   return (
     <>
@@ -195,6 +199,11 @@ function AdminPage() {
       <div className="admin-main-content">
         {isAuthenticated && user ? (
           <div className="admin-section">
+            <div className="admin-controls">
+              <button onClick={goToTeams} className="teams-btn">
+                👥 Gestion des Équipes
+              </button>
+            </div>
 
             {buzzedPlayer && (
               <div className="buzzed-info">
