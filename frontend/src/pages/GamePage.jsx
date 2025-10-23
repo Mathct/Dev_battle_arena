@@ -178,9 +178,7 @@ function GamePage() {
   };
 
   const returnToHome = () => {
-    // Fermer explicitement la connexion Socket.IO
-    socket.disconnect();
-    
+    // Ne pas fermer la connexion Socket.IO, juste naviguer
     setBuzzedPlayer(null);
     setPlayers([]);
     // Nettoyer l'état du jeu du localStorage
