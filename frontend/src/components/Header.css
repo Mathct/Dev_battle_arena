@@ -110,38 +110,3 @@
   color: #e74c3c;
   box-shadow: 0 0 10px rgba(231, 76, 60, 0.5);
 }
-
-/* Responsive */
-@media (max-width: 768px) {
-  .game-header {
-    padding: 8px 15px;
-    flex-direction: column;
-    gap: 10px;
-  }
-  
-  .header-left {
-    justify-content: center;
-  }
-  
-  .header-logo {
-    height: 80px;
-  }
-  
-  .header-controls {
-    flex-direction: column;
-    gap: 20px;
-  }
-  
-  .user-section {
-    flex-direction: column;
-    gap: 8px;
-  }
-}
-
-@media (max-width: 480px) {
-  /* Titre supprimé */
-  
-  .header-logo {
-    height: 70px;
-  }
-}

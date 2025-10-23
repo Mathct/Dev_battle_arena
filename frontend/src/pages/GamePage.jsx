@@ -205,16 +205,14 @@ function GamePage() {
       {isAuthenticated && user ? (
         <div className="game-section">
           {user.role === 'admin' ? (
-            <div className="admin-section">
-              <h2>👑 Mode Administrateur</h2>
-              <p className="admin-info">Vous êtes en mode administrateur. Vous ne participez pas au jeu mais pouvez gérer le buzzer.</p>
+            <div className="admin-buzzer-display">
               {buzzedPlayer && (
                 <div className="buzzed-info">
                   <p className="buzzed-player">
-                    🎉 {buzzedPlayer.name} a buzzé !
+                    {buzzedPlayer.name} a buzzé !
                   </p>
                   <button onClick={resetBuzzer} className="reset-button admin-reset">
-                    🔄 Reset Buzzer
+                    Reset Buzzer
                   </button>
                 </div>
               )}
@@ -226,7 +224,6 @@ function GamePage() {
             </div>
           ) : (
             <div className="buzzer-section">
-              <h2>Votre Buzzer</h2>
               <button 
                 onClick={buzz}
                 disabled={!isConnected || buzzedPlayer}
@@ -237,7 +234,7 @@ function GamePage() {
               {buzzedPlayer && (
                 <div className="buzzed-info">
                   <p className="buzzed-player">
-                    🎉 {buzzedPlayer.name} a buzzé !
+                    {buzzedPlayer.name} a buzzé !
                   </p>
                   {user.role === 'admin' && (
                     <button onClick={resetBuzzer} className="reset-button">
@@ -249,29 +246,32 @@ function GamePage() {
             </div>
           )}
 
-          <div className="players-section">
-            <h2>Joueurs en ligne ({players.length})</h2>
-            <div className="players-list">
-              {players
-                .filter(player => 
-                  player && 
-                  player.name && 
-                  typeof player.name === 'string' && 
-                  player.name.trim() !== '' &&
-                  player.name.trim().length > 0
-                )
-                .sort((a, b) => a.name.localeCompare(b.name, 'fr', { sensitivity: 'base' }))
-                .map((player) => (
-                <div 
-                  key={player.id || player.name} 
-                  className={`player-item ${player.buzzed ? 'buzzed' : ''}`}
-                >
-                  <span className="player-name">{player.name}</span>
-                  {player.buzzed && <span className="buzzed-indicator">🔔</span>}
-                </div>
-              ))}
+          {/* Section joueurs en ligne - seulement pour l'admin */}
+          {user.role === 'admin' && (
+            <div className="players-section">
+              <h2>Joueurs en ligne ({players.length})</h2>
+              <div className="players-list">
+                {players
+                  .filter(player => 
+                    player && 
+                    player.name && 
+                    typeof player.name === 'string' && 
+                    player.name.trim() !== '' &&
+                    player.name.trim().length > 0
+                  )
+                  .sort((a, b) => a.name.localeCompare(b.name, 'fr', { sensitivity: 'base' }))
+                  .map((player) => (
+                  <div 
+                    key={player.id || player.name} 
+                    className={`player-item ${player.buzzed ? 'buzzed' : ''}`}
+                  >
+                    <span className="player-name">{player.name}</span>
+                    {player.buzzed && <span className="buzzed-indicator">🔔</span>}
+                  </div>
+                ))}
+              </div>
             </div>
-          </div>
+          )}
         </div>
       ) : (
         <div className="auth-required">

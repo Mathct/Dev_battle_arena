@@ -1,7 +1,6 @@
 /* Styles pour le système de buzzer Battle Arena */
 .game-main-content {
-  min-height: calc(100vh - 140px); /* Hauteur totale moins header et footer */
-  padding: 20px;
+  min-height: calc(100vh - 140px);
   background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
   color: white;
   font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
@@ -153,13 +152,19 @@
 
 /* Section de jeu */
 .game-section {
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: 30px;
-  margin-top: 20px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: flex-start;
+  padding: 10px;
 }
 
 .buzzer-section {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  min-height: 60vh;
   background: rgba(255, 255, 255, 0.1);
   padding: 30px;
   border-radius: 15px;
@@ -167,39 +172,54 @@
   border: 2px solid rgba(255, 255, 255, 0.2);
 }
 
-/* Section administrateur */
-.admin-section {
-  background: rgba(255, 215, 0, 0.1);
-  padding: 30px;
-  border-radius: 15px;
+/* Affichage du buzzer pour l'admin */
+.admin-buzzer-display {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
   text-align: center;
-  border: 2px solid #ffd700;
 }
 
-.admin-info {
-  color: #ffd700;
+/* Styles pour l'affichage du buzzer admin - encadré unifié */
+.buzzed-info, .waiting-info {
+  background: rgba(255, 193, 7, 0.2);
+  padding: 20px;
+  border-radius: 15px;
+  border: 2px solid #ffc107;
+
+}
+
+.buzzed-player, .waiting-info p {
+  font-size: 1.5rem;
+  color: #ffc107;
   font-weight: bold;
-  margin-bottom: 20px;
-  font-family: 'Orbitron', monospace;
-  font-size: 1.1rem;
+  text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.3);
+  margin: 0;
 }
 
 .admin-reset {
-  background: #ffd700 !important;
+  background: #ffc107 !important;
   color: #000 !important;
-  font-weight: 900;
+  font-weight: 600;
+  border: none;
+  padding: 12px 24px;
+  border-radius: 8px;
+  font-size: 1rem;
+  cursor: pointer;
+  transition: all 0.3s ease;
 }
 
 .admin-reset:hover {
-  background: #000 !important;
-  color: #ffd700 !important;
-  box-shadow: 0 0 15px rgba(255, 215, 0, 0.5);
+  background: #ff9800 !important;
+  color: #fff !important;
+  transform: translateY(-2px);
+  box-shadow: 0 4px 15px rgba(255, 193, 7, 0.4);
 }
 
 .waiting-info {
   color: #666;
   font-style: italic;
-  margin-top: 20px;
   font-family: 'Orbitron', monospace;
 }
 
@@ -221,7 +241,6 @@
   cursor: pointer;
   transition: all 0.3s ease;
   box-shadow: 0 10px 30px rgba(231, 76, 60, 0.3);
-  margin-bottom: 20px;
 }
 
 .buzzer-button:hover:not(:disabled) {
@@ -241,18 +260,12 @@
   box-shadow: 0 5px 15px rgba(231, 76, 60, 0.2);
 }
 
-.buzzed-info {
-  background: rgba(46, 204, 113, 0.2);
-  padding: 20px;
-  border-radius: 10px;
-  border: 2px solid #2ecc71;
-}
 
 .buzzed-player {
   font-size: 1.3rem;
   font-weight: bold;
   margin-bottom: 15px;
-  color: #2ecc71;
+  color: #ffc107;
 }
 
 .reset-button {
@@ -278,6 +291,10 @@
   padding: 30px;
   border-radius: 15px;
   border: 2px solid rgba(255, 255, 255, 0.2);
+  margin-top: 10px;
+  width: 100%;
+  max-width: 800px;
+  align-self: center;
 }
 
 .players-section h2 {
