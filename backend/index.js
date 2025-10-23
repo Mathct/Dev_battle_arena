@@ -4,7 +4,15 @@ const cors = require('cors');
 const dotenv = require('dotenv');
 const { Server } = require('socket.io');
 const http = require('http');
-const { createDatabase, testConnection, createUsersTable } = require('./config/database');
+const { 
+  createDatabase, 
+  testConnection, 
+  createUsersTable,
+  createGamesTable,
+  createTeamsTable,
+  createTeamMembersTable,
+  createUserStatsTable
+} = require('./config/database');
 
 // Charger les variables d'environnement
 dotenv.config();
@@ -230,10 +238,34 @@ async function startServer() {
       process.exit(1);
     }
 
-    // Créer la table users si elle n'existe pas
-    const tableCreated = await createUsersTable();
-    if (!tableCreated) {
+    // Créer toutes les tables si elles n'existent pas
+    const usersTableCreated = await createUsersTable();
+    if (!usersTableCreated) {
       console.error('❌ Impossible de créer la table users');
+      process.exit(1);
+    }
+
+    const gamesTableCreated = await createGamesTable();
+    if (!gamesTableCreated) {
+      console.error('❌ Impossible de créer la table games');
+      process.exit(1);
+    }
+
+    const teamsTableCreated = await createTeamsTable();
+    if (!teamsTableCreated) {
+      console.error('❌ Impossible de créer la table teams');
+      process.exit(1);
+    }
+
+    const teamMembersTableCreated = await createTeamMembersTable();
+    if (!teamMembersTableCreated) {
+      console.error('❌ Impossible de créer la table team_members');
+      process.exit(1);
+    }
+
+    const userStatsTableCreated = await createUserStatsTable();
+    if (!userStatsTableCreated) {
+      console.error('❌ Impossible de créer la table user_stats');
       process.exit(1);
     }
 

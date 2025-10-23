@@ -232,7 +232,7 @@ function GamePage() {
                 disabled={!isConnected || buzzedPlayer}
                 className={`buzzer-button ${buzzedPlayer ? 'disabled' : ''}`}
               >
-                🔔 BUZZER
+                BUZZER
               </button>
               {buzzedPlayer && (
                 <div className="buzzed-info">
