@@ -23,9 +23,13 @@ function HomePage() {
     
     if (token && userData) {
       try {
-        JSON.parse(userData); // Vérifier que les données sont valides
-        // Rediriger automatiquement l'utilisateur connecté
-        navigate('/game');
+        const parsedUser = JSON.parse(userData);
+        // Rediriger selon le rôle de l'utilisateur
+        if (parsedUser.role === 'admin') {
+          navigate('/admin');
+        } else {
+          navigate('/game');
+        }
       } catch (error) {
         console.error('Erreur lors du parsing des données utilisateur:', error);
         localStorage.removeItem('token');
@@ -67,7 +71,12 @@ function HomePage() {
           localStorage.setItem('user', JSON.stringify(data.user));
           setMessage('Connexion réussie !');
           setTimeout(() => {
-            navigate('/game');
+            // Rediriger selon le rôle
+            if (data.user.role === 'admin') {
+              navigate('/admin');
+            } else {
+              navigate('/game');
+            }
           }, 1000);
         } else {
           setMessage(data.message);
@@ -99,7 +108,12 @@ function HomePage() {
           localStorage.setItem('user', JSON.stringify(data.user));
           setMessage('Inscription réussie !');
           setTimeout(() => {
-            navigate('/game');
+            // Rediriger selon le rôle
+            if (data.user.role === 'admin') {
+              navigate('/admin');
+            } else {
+              navigate('/game');
+            }
           }, 1000);
         } else {
           setMessage(data.message);

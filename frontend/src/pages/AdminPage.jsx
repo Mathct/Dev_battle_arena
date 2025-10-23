@@ -5,13 +5,14 @@ import useAutoLogout from "../hooks/useAutoLogout";
 import AutoLogoutWarning from "../components/AutoLogoutWarning";
 import Header from "../components/Header";
 import Footer from "../components/Footer";
-import "./GamePage.css";
+import "./AdminPage.css";
 
 const socket = io("http://localhost:3000");
 
-function GamePage() {
+function AdminPage() {
   const navigate = useNavigate();
   const [isConnected, setIsConnected] = useState(false);
+  const [players, setPlayers] = useState([]);
   const [buzzedPlayer, setBuzzedPlayer] = useState(() => {
     // Récupérer l'état du buzzer depuis le localStorage au chargement
     const savedBuzzedPlayer = localStorage.getItem('buzzedPlayer');
@@ -35,14 +36,12 @@ function GamePage() {
         setUser(parsedUser);
         setIsAuthenticated(true);
         
-        // Rediriger les admins vers la page admin
-        if (parsedUser.role === 'admin') {
-          console.log("👑 Redirection vers la page admin");
-          navigate('/admin');
+        // Vérifier que l'utilisateur est bien un admin
+        if (parsedUser.role !== 'admin') {
+          console.log("❌ Accès refusé - rôle non admin");
+          navigate('/game');
           return;
         }
-        
-        // L'utilisateur est automatiquement dans la partie
       } catch (error) {
         console.error('Erreur lors du parsing des données utilisateur:', error);
         localStorage.removeItem('token');
@@ -61,59 +60,71 @@ function GamePage() {
     // Gestion de la connexion
     socket.on("connect", () => {
       setIsConnected(true);
-      console.log("✅ Connecté au serveur");
+      console.log("✅ Connecté au serveur (Admin)");
     });
 
     socket.on("disconnect", () => {
       setIsConnected(false);
-      console.log("❌ Déconnecté du serveur");
+      console.log("❌ Déconnecté du serveur (Admin)");
     });
 
+    // Gestion des joueurs en ligne
+    socket.on("playersUpdate", (playersList) => {
+      console.log("📋 Liste des joueurs reçue (Admin):", playersList);
+      setPlayers(playersList);
+      
+      // Vérifier si un joueur a buzzé dans la liste
+      const buzzedPlayerInList = playersList.find(player => player.buzzed);
+      if (buzzedPlayerInList) {
+        console.log("🔔 Joueur buzzé détecté dans la liste des joueurs:", buzzedPlayerInList);
+        setBuzzedPlayer(buzzedPlayerInList);
+        localStorage.setItem('buzzedPlayer', JSON.stringify(buzzedPlayerInList));
+      }
+    });
 
     // Gestion du buzzer
     socket.on("playerBuzzed", (player) => {
       setBuzzedPlayer(player);
       localStorage.setItem('buzzedPlayer', JSON.stringify(player));
-      console.log("🔔 État du buzzer reçu:", player);
+      console.log("🔔 État du buzzer reçu (Admin):", player);
     });
 
     // Reset du buzzer
     socket.on("buzzerReset", () => {
       setBuzzedPlayer(null);
       localStorage.removeItem('buzzedPlayer');
-      console.log("🔄 Buzzer reset reçu");
+      console.log("🔄 Buzzer reset reçu (Admin)");
     });
-
 
     // Nettoyage
     return () => {
       socket.off("connect");
       socket.off("disconnect");
+      socket.off("playersUpdate");
       socket.off("playerBuzzed");
       socket.off("buzzerReset");
     };
   }, [navigate]);
 
-  // Rejoindre automatiquement quand l'utilisateur est défini et connecté
+  // Rejoindre automatiquement en mode admin quand l'utilisateur est défini et connecté
   useEffect(() => {
     if (isAuthenticated && user && isConnected && !hasJoinedGame) {
       // Petit délai pour s'assurer que la connexion est stable
       setTimeout(() => {
-        // Les joueurs normaux rejoignent le jeu
-        socket.emit('joinGame', user.username, false);
+        // Les admins se connectent au serveur mais ne rejoignent pas le jeu
+        socket.emit('joinGame', user.username, true);
         setHasJoinedGame(true);
-        console.log("🎮 Rejoint automatiquement la partie");
+        console.log("👑 Admin connecté au serveur (mode surveillance)");
       }, 200);
     }
   }, [isAuthenticated, user, isConnected, hasJoinedGame]);
-
 
   // Éviter les reconnexions multiples
   useEffect(() => {
     const handleVisibilityChange = () => {
       if (document.visibilityState === 'visible' && isAuthenticated && user && isConnected) {
         // Ne pas rejoindre automatiquement si on revient sur l'onglet
-        console.log("👁️ Onglet visible - pas de reconnexion");
+        console.log("👁️ Onglet visible - pas de reconnexion (Admin)");
       }
     };
 
@@ -131,15 +142,14 @@ function GamePage() {
     };
   }, [isAuthenticated, user, isConnected]);
 
-  const buzz = () => {
+  const resetBuzzer = () => {
     if (isConnected) {
-      console.log("🔔 Tentative de buzzer...");
-      socket.emit("buzz");
+      console.log("🔄 Reset du buzzer par l'admin");
+      socket.emit("resetBuzzer");
     } else {
       console.log("❌ Pas connecté au serveur");
     }
   };
-
 
   const handleLogout = () => {
     // Fermer explicitement la connexion Socket.IO
@@ -148,9 +158,11 @@ function GamePage() {
     localStorage.removeItem('token');
     localStorage.removeItem('user');
     localStorage.removeItem('gameState');
+    localStorage.removeItem('buzzedPlayer');
     setUser(null);
     setIsAuthenticated(false);
     setBuzzedPlayer(null);
+    setPlayers([]);
     
     // Forcer un refresh de la page pour s'assurer que la déconnexion est bien détectée
     window.location.href = '/';
@@ -159,10 +171,12 @@ function GamePage() {
   const returnToHome = () => {
     // Ne pas fermer la connexion Socket.IO, juste naviguer
     setBuzzedPlayer(null);
+    setPlayers([]);
     // Nettoyer l'état du jeu du localStorage
     localStorage.removeItem('gameState');
     navigate('/');
   };
+
 
   return (
     <>
@@ -178,38 +192,65 @@ function GamePage() {
         onReturnHome={returnToHome}
         isConnected={isConnected}
       />
-      <div className="game-main-content">
+      <div className="admin-main-content">
+        {isAuthenticated && user ? (
+          <div className="admin-section">
 
-      {isAuthenticated && user ? (
-        <>
-          <h2 className="buzzer-title">Votre Buzzer</h2>
-          <button 
-            onClick={buzz}
-            disabled={!isConnected || buzzedPlayer}
-            className={`buzzer-button ${buzzedPlayer ? 'disabled' : ''}`}
-          >
-            BUZZER
-          </button>
-          {buzzedPlayer && (
-            <div className="buzzed-info">
-              <p className="buzzed-player">
-              🔔 {buzzedPlayer.name} a buzzé !
-              </p>
+            {buzzedPlayer && (
+              <div className="buzzed-info">
+                <h2>🎉 Joueur qui a buzzé</h2>
+                <div className="buzzed-player-card">
+                  <span className="buzzed-player-name">{buzzedPlayer.name}</span>
+                  <button onClick={resetBuzzer} className="reset-button admin-reset">
+                    🔄 Reset Buzzer
+                  </button>
+                </div>
+              </div>
+            )}
+
+            {!buzzedPlayer && (
+              <div className="waiting-info">
+                <h2>⏳ En attente</h2>
+                <p>Aucun joueur n'a encore buzzé...</p>
+              </div>
+            )}
+
+            <div className="players-section">
+              <h2>Joueurs en ligne ({players.length})</h2>
+              <div className="players-list">
+                {players
+                  .filter(player => 
+                    player && 
+                    player.name && 
+                    typeof player.name === 'string' && 
+                    player.name.trim() !== '' &&
+                    player.name.trim().length > 0
+                  )
+                  .sort((a, b) => a.name.localeCompare(b.name, 'fr', { sensitivity: 'base' }))
+                  .map((player) => (
+                  <div 
+                    key={player.id || player.name} 
+                    className={`player-item ${player.buzzed ? 'buzzed' : ''}`}
+                  >
+                    <span className="player-name">{player.name}</span>
+                    {player.buzzed && <span className="buzzed-indicator">🔔</span>}
+                  </div>
+                ))}
+              </div>
             </div>
-          )}
-        </>
-      ) : (
-        <div className="auth-required">
-          <p>Vous devez être connecté pour accéder au jeu.</p>
-          <button onClick={returnToHome} className="auth-button">
-            🔐 Se connecter
-          </button>
-        </div>
-      )}
+          </div>
+        ) : (
+          <div className="auth-required">
+            <p>Vous devez être connecté en tant qu'administrateur pour accéder à cette page.</p>
+            <button onClick={returnToHome} className="auth-button">
+              🔐 Se connecter
+            </button>
+          </div>
+        )}
       </div>
       <Footer />
     </>
   );
 }
 
-export default GamePage;
+export default AdminPage;
