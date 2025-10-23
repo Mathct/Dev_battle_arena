@@ -262,6 +262,7 @@ function GamePage() {
                   player.name.trim() !== '' &&
                   player.name.trim().length > 0
                 )
+                .sort((a, b) => a.name.localeCompare(b.name, 'fr', { sensitivity: 'base' }))
                 .map((player) => (
                 <div 
                   key={player.id || player.name} 
