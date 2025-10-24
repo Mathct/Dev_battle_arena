@@ -1,6 +1,7 @@
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router";
 import "./HomePage.css";
+import CrtEffect from "../components/CrtEffect";
 
 function HomePage() {
   const navigate = useNavigate();
@@ -140,6 +141,9 @@ function HomePage() {
 
   return (
     <div className="homepage-container">
+      {/* Effet de vieille télé cathodique */}
+      <CrtEffect />
+      
       {!showAuth ? (
         <>
           {/* Bouton d'entrée */}

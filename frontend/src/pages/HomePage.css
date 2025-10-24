@@ -17,7 +17,7 @@
 /* Bouton d'entrée */
 .enter-section {
   position: relative;
-  z-index: 2;
+  z-index: 20;
 }
 
 .enter-button {
