@@ -1,6 +1,5 @@
 /* Styles pour la page Admin */
 .admin-main-content {
-  height: calc(100vh - 182px);
   background: linear-gradient(135deg, #1a1a2e 0%, #16213e 50%, #0f3460 100%);
   padding: 20px;
   display: flex;
