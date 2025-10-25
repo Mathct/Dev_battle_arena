@@ -182,6 +182,12 @@ function GamePage() {
 
       {isAuthenticated && user ? (
         <>
+
+        <div className="waiting-info">
+                <h2>⏳ En attente de lancement de la partie ...</h2>
+       </div>
+        
+
           <h2 className="buzzer-title">Votre Buzzer</h2>
           <button 
             onClick={buzz}

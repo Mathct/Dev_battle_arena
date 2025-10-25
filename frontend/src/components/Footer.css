@@ -2,8 +2,10 @@
 .game-footer {
   background: #000;
   padding: 15px 20px;
-  position: sticky;
+  position: fixed;
   bottom: 0;
+  left: 0;
+  right: 0;
   z-index: 100;
 }
 
