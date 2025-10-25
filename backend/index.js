@@ -8,7 +8,8 @@ const {
   createDatabase, 
   testConnection, 
   createUsersTable,
-  createTeamsTable
+  createTeamsTable,
+  createGameTable
 } = require('./config/database');
 
 // Charger les variables d'environnement
@@ -245,6 +246,12 @@ async function startServer() {
     const teamsTableCreated = await createTeamsTable();
     if (!teamsTableCreated) {
       console.error('❌ Impossible de créer la table teams');
+      process.exit(1);
+    }
+
+    const gameTableCreated = await createGameTable();
+    if (!gameTableCreated) {
+      console.error('❌ Impossible de créer la table game');
       process.exit(1);
     }
 

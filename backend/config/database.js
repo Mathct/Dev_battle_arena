@@ -93,7 +93,6 @@ async function createTeamsTable() {
         id INT AUTO_INCREMENT PRIMARY KEY,
         user_id INT NOT NULL,
         team_name VARCHAR(50) NOT NULL,
-        team_color VARCHAR(7) NOT NULL,
         created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
         FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
       ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci
@@ -109,6 +108,36 @@ async function createTeamsTable() {
   }
 }
 
+// Fonction pour créer la table game si elle n'existe pas
+async function createGameTable() {
+  try {
+    const connection = await pool.getConnection();
+    
+    const createTableQuery = `
+      CREATE TABLE IF NOT EXISTS game (
+        id INT AUTO_INCREMENT PRIMARY KEY,
+        game_state INT DEFAULT 0
+      ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci
+    `;
+    
+    await connection.execute(createTableQuery);
+    
+    // Vérifier si un enregistrement existe, sinon en créer un
+    const [rows] = await connection.execute('SELECT COUNT(*) as count FROM game');
+    if (rows[0].count === 0) {
+      await connection.execute('INSERT INTO game (game_state) VALUES (0)');
+      console.log('✅ Enregistrement de jeu initial créé avec game_state = 0');
+    }
+    
+    console.log('✅ Table game créée ou vérifiée avec succès');
+    connection.release();
+    return true;
+  } catch (error) {
+    console.error('❌ Erreur lors de la création de la table game:', error.message);
+    return false;
+  }
+}
+
 
 
 module.exports = {
@@ -116,5 +145,6 @@ module.exports = {
   createDatabase,
   testConnection,
   createUsersTable,
-  createTeamsTable
+  createTeamsTable,
+  createGameTable
 };
