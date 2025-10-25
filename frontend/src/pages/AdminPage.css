@@ -47,6 +47,96 @@
   box-shadow: 0 6px 20px rgba(155, 89, 182, 0.4);
 }
 
+/* Contrôles de jeu */
+.game-controls {
+  background: rgba(255, 255, 255, 0.05);
+  border-radius: 15px;
+  padding: 25px;
+  margin-bottom: 30px;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  backdrop-filter: blur(10px);
+}
+
+.game-controls h2 {
+  color: #ffd700;
+  font-family: 'Orbitron', monospace;
+  font-size: 1.8rem;
+  margin-bottom: 20px;
+  text-align: center;
+  text-shadow: 0 0 10px rgba(255, 215, 0, 0.5);
+}
+
+.game-state-info {
+  text-align: center;
+  margin-bottom: 20px;
+}
+
+.game-state-info p {
+  color: #ffffff;
+  font-size: 1.2rem;
+  margin: 0;
+}
+
+.state-indicator {
+  font-weight: bold;
+  padding: 8px 16px;
+  border-radius: 20px;
+  font-family: 'Orbitron', monospace;
+}
+
+.state-indicator.active {
+  background: linear-gradient(45deg, #2ecc71, #27ae60);
+  color: white;
+  box-shadow: 0 4px 15px rgba(46, 204, 113, 0.3);
+}
+
+.state-indicator.waiting {
+  background: linear-gradient(45deg, #f39c12, #e67e22);
+  color: white;
+  box-shadow: 0 4px 15px rgba(243, 156, 18, 0.3);
+}
+
+.game-buttons {
+  display: flex;
+  justify-content: center;
+  gap: 20px;
+}
+
+.start-game-btn, .stop-game-btn {
+  padding: 15px 30px;
+  border: none;
+  border-radius: 10px;
+  font-family: 'Orbitron', monospace;
+  font-weight: bold;
+  font-size: 1.1rem;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+}
+
+.start-game-btn {
+  background: linear-gradient(45deg, #2ecc71, #27ae60);
+  color: white;
+  box-shadow: 0 4px 15px rgba(46, 204, 113, 0.3);
+}
+
+.start-game-btn:hover {
+  transform: translateY(-3px);
+  box-shadow: 0 6px 20px rgba(46, 204, 113, 0.4);
+}
+
+.stop-game-btn {
+  background: linear-gradient(45deg, #e74c3c, #c0392b);
+  color: white;
+  box-shadow: 0 4px 15px rgba(231, 76, 60, 0.3);
+}
+
+.stop-game-btn:hover {
+  transform: translateY(-3px);
+  box-shadow: 0 6px 20px rgba(231, 76, 60, 0.4);
+}
+
 
 .buzzed-info {
   background: linear-gradient(135deg, #ff6b6b, #ee5a24);

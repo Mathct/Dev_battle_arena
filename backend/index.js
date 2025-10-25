@@ -5,6 +5,7 @@ const dotenv = require('dotenv');
 const { Server } = require('socket.io');
 const http = require('http');
 const { 
+  pool,
   createDatabase, 
   testConnection, 
   createUsersTable,
@@ -61,6 +62,44 @@ app.get('/api/data', (req, res) => {
     users: io.engine.clientsCount,
     timestamp: new Date().toISOString()
   });
+});
+
+// Route pour obtenir l'état du jeu
+app.get('/api/game/state', async (req, res) => {
+  try {
+    const connection = await pool.getConnection();
+    const [rows] = await connection.execute('SELECT game_state FROM game ORDER BY id DESC LIMIT 1');
+    connection.release();
+    
+    const gameState = rows.length > 0 ? rows[0].game_state : 0;
+    res.json({ success: true, gameState });
+  } catch (error) {
+    console.error('Erreur lors de la récupération de l\'état du jeu:', error);
+    res.status(500).json({ success: false, message: 'Erreur serveur' });
+  }
+});
+
+// Route pour modifier l'état du jeu (admin seulement)
+app.post('/api/game/state', async (req, res) => {
+  try {
+    const { gameState } = req.body;
+    
+    if (gameState !== 0 && gameState !== 1) {
+      return res.status(400).json({ success: false, message: 'État de jeu invalide' });
+    }
+    
+    const connection = await pool.getConnection();
+    await connection.execute('UPDATE game SET game_state = ? WHERE id = (SELECT id FROM (SELECT id FROM game ORDER BY id DESC LIMIT 1) as subquery)', [gameState]);
+    connection.release();
+    
+    // Notifier tous les clients du changement d'état
+    io.emit('gameStateChanged', { gameState });
+    
+    res.json({ success: true, gameState });
+  } catch (error) {
+    console.error('Erreur lors de la modification de l\'état du jeu:', error);
+    res.status(500).json({ success: false, message: 'Erreur serveur' });
+  }
 });
 
 // Stockage des joueurs connectés (clé = nom d'utilisateur)

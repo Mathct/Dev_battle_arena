@@ -20,6 +20,7 @@ function GamePage() {
   const [user, setUser] = useState(null);
   const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [hasJoinedGame, setHasJoinedGame] = useState(false);
+  const [gameState, setGameState] = useState(0);
   
   // Hook de déconnexion automatique (30 minutes d'inactivité, avertissement à 25 minutes)
   const { showWarning, warningCountdown, handleStayConnected, handleLogoutNow } = useAutoLogout(30, 5);
@@ -84,6 +85,12 @@ function GamePage() {
       console.log("🔄 Buzzer reset reçu");
     });
 
+    // Écouter les changements d'état du jeu
+    socket.on("gameStateChanged", (data) => {
+      setGameState(data.gameState);
+      console.log("🎮 État du jeu changé:", data.gameState);
+    });
+
 
     // Nettoyage
     return () => {
@@ -91,8 +98,26 @@ function GamePage() {
       socket.off("disconnect");
       socket.off("playerBuzzed");
       socket.off("buzzerReset");
+      socket.off("gameStateChanged");
     };
   }, [navigate]);
+
+  // Charger l'état du jeu au démarrage
+  useEffect(() => {
+    const loadGameState = async () => {
+      try {
+        const response = await fetch('http://localhost:3000/api/game/state');
+        if (response.ok) {
+          const data = await response.json();
+          setGameState(data.gameState);
+        }
+      } catch (error) {
+        console.error('Erreur lors du chargement de l\'état du jeu:', error);
+      }
+    };
+    
+    loadGameState();
+  }, []);
 
   // Rejoindre automatiquement quand l'utilisateur est défini et connecté
   useEffect(() => {
@@ -182,26 +207,28 @@ function GamePage() {
 
       {isAuthenticated && user ? (
         <>
-
-        <div className="waiting-info">
-                <h2>⏳ En attente de lancement de la partie ...</h2>
-       </div>
-        
-
-          <h2 className="buzzer-title">Votre Buzzer</h2>
-          <button 
-            onClick={buzz}
-            disabled={!isConnected || buzzedPlayer}
-            className={`buzzer-button ${buzzedPlayer ? 'disabled' : ''}`}
-          >
-            BUZZER
-          </button>
-          {buzzedPlayer && (
-            <div className="buzzed-info">
-              <p className="buzzed-player">
-              🔔 {buzzedPlayer.name} a buzzé !
-              </p>
+          {gameState === 0 ? (
+            <div className="waiting-info">
+              <h2>⏳ En attente du lancement de la partie ...</h2>
             </div>
+          ) : (
+            <>
+              <h2 className="buzzer-title">Votre Buzzer</h2>
+              <button 
+                onClick={buzz}
+                disabled={!isConnected || buzzedPlayer}
+                className={`buzzer-button ${buzzedPlayer ? 'disabled' : ''}`}
+              >
+                BUZZER
+              </button>
+              {buzzedPlayer && (
+                <div className="buzzed-info">
+                  <p className="buzzed-player">
+                    🔔 {buzzedPlayer.name} a buzzé !
+                  </p>
+                </div>
+              )}
+            </>
           )}
         </>
       ) : (

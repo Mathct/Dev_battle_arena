@@ -21,6 +21,7 @@ function AdminPage() {
   const [user, setUser] = useState(null);
   const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [hasJoinedGame, setHasJoinedGame] = useState(false);
+  const [gameState, setGameState] = useState(0);
   
   // Hook de déconnexion automatique (30 minutes d'inactivité, avertissement à 25 minutes)
   const { showWarning, warningCountdown, handleStayConnected, handleLogoutNow } = useAutoLogout(30, 5);
@@ -96,6 +97,12 @@ function AdminPage() {
       console.log("🔄 Buzzer reset reçu (Admin)");
     });
 
+    // Écouter les changements d'état du jeu
+    socket.on("gameStateChanged", (data) => {
+      setGameState(data.gameState);
+      console.log("🎮 État du jeu changé (Admin):", data.gameState);
+    });
+
     // Nettoyage
     return () => {
       socket.off("connect");
@@ -103,8 +110,26 @@ function AdminPage() {
       socket.off("playersUpdate");
       socket.off("playerBuzzed");
       socket.off("buzzerReset");
+      socket.off("gameStateChanged");
     };
   }, [navigate]);
+
+  // Charger l'état du jeu au démarrage
+  useEffect(() => {
+    const loadGameState = async () => {
+      try {
+        const response = await fetch('http://localhost:3000/api/game/state');
+        if (response.ok) {
+          const data = await response.json();
+          setGameState(data.gameState);
+        }
+      } catch (error) {
+        console.error('Erreur lors du chargement de l\'état du jeu:', error);
+      }
+    };
+    
+    loadGameState();
+  }, []);
 
   // Rejoindre automatiquement en mode admin quand l'utilisateur est défini et connecté
   useEffect(() => {
@@ -148,6 +173,50 @@ function AdminPage() {
       socket.emit("resetBuzzer");
     } else {
       console.log("❌ Pas connecté au serveur");
+    }
+  };
+
+  const startGame = async () => {
+    try {
+      const response = await fetch('http://localhost:3000/api/game/state', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${localStorage.getItem('token')}`
+        },
+        body: JSON.stringify({ gameState: 1 })
+      });
+
+      if (response.ok) {
+        console.log("🎮 Partie démarrée par l'admin");
+      } else {
+        alert('Erreur lors du démarrage de la partie');
+      }
+    } catch (error) {
+      console.error('Erreur lors du démarrage de la partie:', error);
+      alert('Erreur lors du démarrage de la partie');
+    }
+  };
+
+  const stopGame = async () => {
+    try {
+      const response = await fetch('http://localhost:3000/api/game/state', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${localStorage.getItem('token')}`
+        },
+        body: JSON.stringify({ gameState: 0 })
+      });
+
+      if (response.ok) {
+        console.log("🛑 Partie arrêtée par l'admin");
+      } else {
+        alert('Erreur lors de l\'arrêt de la partie');
+      }
+    } catch (error) {
+      console.error('Erreur lors de l\'arrêt de la partie:', error);
+      alert('Erreur lors de l\'arrêt de la partie');
     }
   };
 
@@ -203,6 +272,26 @@ function AdminPage() {
               <button onClick={goToTeams} className="teams-btn">
                 👥 Gestion des Équipes
               </button>
+            </div>
+
+            <div className="game-controls">
+              <h2>Contrôle de la Partie</h2>
+              <div className="game-state-info">
+                <p>État actuel: <span className={`state-indicator ${gameState === 1 ? 'active' : 'waiting'}`}>
+                  {gameState === 1 ? '🎮 Partie en cours' : '⏳ En attente'}
+                </span></p>
+              </div>
+              <div className="game-buttons">
+                {gameState === 0 ? (
+                  <button onClick={startGame} className="start-game-btn">
+                    🚀 Démarrer la Partie
+                  </button>
+                ) : (
+                  <button onClick={stopGame} className="stop-game-btn">
+                    🛑 Arrêter la Partie
+                  </button>
+                )}
+              </div>
             </div>
 
             {buzzedPlayer && (
