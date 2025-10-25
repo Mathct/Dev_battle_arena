@@ -31,7 +31,7 @@ async function createDatabase() {
     const tempPool = mysql.createPool(dbConfigWithoutDB);
     const connection = await tempPool.getConnection();
     
-    const dbName = process.env.DB_NAME || 'dev_battle_arena';
+    const dbName = process.env.DB_NAME || 'dev_battle_arena_db';
     await connection.execute(`CREATE DATABASE IF NOT EXISTS \`${dbName}\` CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci`);
     
     console.log(`✅ Base de données '${dbName}' créée ou vérifiée avec succès`);
