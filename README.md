@@ -8,19 +8,20 @@ Imaginez que vous parlez au téléphone avec un ami. Avec un **WebSocket**, c'es
 
 ### 🔄 Comparaison simple : HTTP vs WebSocket
 
-#### HTTP (Comme envoyer une lettre)
+#### HTTP (Comme envoyer un SMS)
 ```
-Vous → Poste : "Envoie cette lettre"
-Poste → Destinataire : Livre la lettre
-[FIN - Vous devez réécrire une nouvelle lettre pour la prochaine communication]
+Vous → Serveur : "Donne-moi les données"
+Serveur → Vous : "Voici les données"
+[FIN - Vous devez envoyer un nouveau SMS pour la prochaine question]
 ```
 
-#### WebSocket (Comme un appel téléphonique)
+#### WebSocket (Comme un chat en direct)
 ```
-Vous ↔ Ami : Conversation continue
-Vous : "Salut, comment ça va ?"
-Ami : "Ça va bien ! Et toi ?"
-Vous : "Super ! J'ai une question..."
+Vous ↔ Serveur : Chat ouvert en permanence
+Vous : "Qui est connecté ?"
+Serveur : "Alice, Bob et Charlie"
+Vous : "Alice a buzzé !"
+Serveur : "Message reçu, je préviens l'admin"
 [LA CONVERSATION CONTINUE SANS INTERRUPTION]
 ```
 
