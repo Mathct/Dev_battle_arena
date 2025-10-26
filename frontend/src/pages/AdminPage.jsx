@@ -183,6 +183,12 @@ function AdminPage() {
   };
 
   const startGame = async () => {
+    // Vérifier si les équipes sont vides
+    if (teams.team1.length === 0 && teams.team2.length === 0) {
+      alert('❌ Impossible de démarrer la partie : Aucune équipe n\'est assignée. Veuillez d\'abord assigner des joueurs aux équipes.');
+      return;
+    }
+
     try {
       const response = await fetch('http://localhost:3000/api/game/state', {
         method: 'POST',
@@ -335,6 +341,41 @@ function AdminPage() {
     }
   };
 
+  const validateResponse = async () => {
+    if (!buzzedPlayer) return;
+
+    // Trouver l'équipe du joueur qui a buzzé
+    let playerTeam = null;
+    if (teams.team1.find(player => player.username === buzzedPlayer.name)) {
+      playerTeam = 'team1';
+    } else if (teams.team2.find(player => player.username === buzzedPlayer.name)) {
+      playerTeam = 'team2';
+    }
+
+    if (!playerTeam) {
+      console.error('❌ Impossible de trouver l\'équipe du joueur');
+      return;
+    }
+
+    // Incrémenter le score de l'équipe
+    const newScore = scores[playerTeam] + 1;
+    await updateScore(playerTeam, newScore);
+
+    // Reset du buzzer après validation
+    resetBuzzer();
+    
+    console.log(`✅ Réponse validée ! ${buzzedPlayer.name} (${playerTeam}) gagne 1 point`);
+  };
+
+  const rejectResponse = () => {
+    if (!buzzedPlayer) return;
+    
+    // Reset du buzzer après refus
+    resetBuzzer();
+    
+    console.log(`❌ Réponse refusée pour ${buzzedPlayer.name}`);
+  };
+
 
   return (
     <>
@@ -363,8 +404,12 @@ function AdminPage() {
                 </div>
                 <div className="game-buttons">
                   {gameState === 0 ? (
-                    <button onClick={startGame} className="start-game-btn">
-                      🚀 Démarrer la Partie
+                    <button 
+                      onClick={startGame} 
+                      className={`start-game-btn ${teams.team1.length === 0 && teams.team2.length === 0 ? 'disabled' : ''}`}
+                      disabled={teams.team1.length === 0 && teams.team2.length === 0}
+                    >
+                      {teams.team1.length === 0 && teams.team2.length === 0 ? '❌ Aucune équipe assignée' : '🚀 Démarrer la Partie'}
                     </button>
                   ) : (
                     <button onClick={stopGame} className="stop-game-btn">
@@ -378,6 +423,14 @@ function AdminPage() {
                 <div className="buzzed-info">
                   <h2>🎉 {buzzedPlayer.name} a buzzé</h2>
                   <div className="buzzed-player-card">
+                    <div className="buzzer-actions">
+                      <button onClick={validateResponse} className="validate-response-btn">
+                        ✅ Valider réponse
+                      </button>
+                      <button onClick={rejectResponse} className="reject-response-btn">
+                        ❌ Refuser réponse
+                      </button>
+                    </div>
                     <button onClick={resetBuzzer} className="reset-button admin-reset">
                       🔄 Reset Buzzer
                     </button>

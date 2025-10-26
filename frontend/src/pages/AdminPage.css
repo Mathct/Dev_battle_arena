@@ -317,9 +317,21 @@
   box-shadow: 0 4px 15px rgba(46, 204, 113, 0.3);
 }
 
-.start-game-btn:hover {
+.start-game-btn:hover:not(.disabled) {
   transform: translateY(-3px);
   box-shadow: 0 6px 20px rgba(46, 204, 113, 0.4);
+}
+
+.start-game-btn.disabled {
+  background: linear-gradient(45deg, #95a5a6, #7f8c8d);
+  color: #bdc3c7;
+  cursor: not-allowed;
+  box-shadow: none;
+}
+
+.start-game-btn.disabled:hover {
+  transform: none;
+  box-shadow: none;
 }
 
 .stop-game-btn {
@@ -363,6 +375,47 @@
   align-items: center;
   gap: 15px;
   margin-top: 15px;
+}
+
+.buzzer-actions {
+  display: flex;
+  gap: 10px;
+  margin-bottom: 10px;
+}
+
+.validate-response-btn, .reject-response-btn {
+  padding: 10px 20px;
+  border: none;
+  border-radius: 8px;
+  font-family: 'Orbitron', monospace;
+  font-weight: bold;
+  font-size: 0.9rem;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.validate-response-btn {
+  background: linear-gradient(45deg, #2ecc71, #27ae60);
+  color: white;
+  box-shadow: 0 4px 15px rgba(46, 204, 113, 0.3);
+}
+
+.validate-response-btn:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 6px 20px rgba(46, 204, 113, 0.4);
+}
+
+.reject-response-btn {
+  background: linear-gradient(45deg, #e74c3c, #c0392b);
+  color: white;
+  box-shadow: 0 4px 15px rgba(231, 76, 60, 0.3);
+}
+
+.reject-response-btn:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 6px 20px rgba(231, 76, 60, 0.4);
 }
 
 
