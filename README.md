@@ -4,7 +4,7 @@
 
 ### 🤔 Qu'est-ce qu'un WebSocket ?
 
-Imaginez que vous parlez au téléphone avec un ami. Avec un **WebSocket**, c'est comme si vous aviez une **ligne téléphonique toujours ouverte** entre votre navigateur et le serveur. Vous pouvez parler et écouter en même temps, instantanément !
+Imaginez que vous avez un **chat en direct** avec un ami. Avec un **WebSocket**, c'est exactement pareil entre votre navigateur et le serveur. Vous pouvez envoyer des messages et en recevoir **en même temps, instantanément** !
 
 ### 🔄 Comparaison simple : HTTP vs WebSocket
 
