@@ -13,9 +13,11 @@
 
 body {
   font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-  background: #000;
+  background: linear-gradient(135deg, #1a1a2e 0%, #16213e 50%, #0f3460 100%);
+  background-attachment: fixed;
   color: #fff;
   overflow-x: hidden;
+  min-height: 100vh;
 }
 
 /* Styles pour les transitions de pages */
