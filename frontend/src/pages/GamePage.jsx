@@ -111,7 +111,7 @@ function GamePage() {
     };
   }, [navigate]);
 
-  // Charger l'état du jeu au démarrage
+  // Charger l'état du jeu et des buzzers au démarrage
   useEffect(() => {
     const loadGameState = async () => {
       try {
@@ -119,6 +119,8 @@ function GamePage() {
         if (response.ok) {
           const data = await response.json();
           setGameState(data.gameState);
+          setBuzzersEnabled(data.buzzersEnabled || false);
+          console.log("🎮 État du jeu chargé:", data.gameState, "Buzzers:", data.buzzersEnabled);
         }
       } catch (error) {
         console.error('Erreur lors du chargement de l\'état du jeu:', error);

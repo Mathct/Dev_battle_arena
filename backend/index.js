@@ -73,7 +73,7 @@ app.get('/api/game/state', async (req, res) => {
     connection.release();
     
     const gameState = rows.length > 0 ? rows[0].game_state : 0;
-    res.json({ success: true, gameState });
+    res.json({ success: true, gameState, buzzersEnabled });
   } catch (error) {
     console.error('Erreur lors de la récupération de l\'état du jeu:', error);
     res.status(500).json({ success: false, message: 'Erreur serveur' });
@@ -93,6 +93,12 @@ app.post('/api/game/state', async (req, res) => {
     await connection.execute('UPDATE game SET game_state = ? WHERE id = (SELECT id FROM (SELECT id FROM game ORDER BY id DESC LIMIT 1) as subquery)', [gameState]);
     connection.release();
     
+    // Si la partie s'arrête, désactiver les buzzers
+    if (gameState === 0) {
+      buzzersEnabled = false;
+      console.log('🛑 Partie arrêtée - Désactivation des buzzers');
+    }
+    
     // Notifier tous les clients du changement d'état
     io.emit('gameStateChanged', { gameState });
     
@@ -106,6 +112,7 @@ app.post('/api/game/state', async (req, res) => {
 // Stockage des joueurs connectés (clé = nom d'utilisateur)
 const players = new Map();
 let buzzedPlayer = null;
+let buzzersEnabled = false; // État global des buzzers
 
 // Gestion des connexions Socket.IO
 io.on('connection', (socket) => {
@@ -228,6 +235,7 @@ io.on('connection', (socket) => {
   // Gestion de l'état des buzzers
   socket.on('buzzersStateChanged', (data) => {
     console.log(`🔔 État des buzzers changé: ${data.enabled ? 'activés' : 'désactivés'}`);
+    buzzersEnabled = data.enabled; // Mettre à jour l'état global
     console.log(`📡 Diffusion de l'état des buzzers à tous les clients...`);
     // Diffuser l'état des buzzers à tous les clients
     io.emit('buzzersStateChanged', { enabled: data.enabled });

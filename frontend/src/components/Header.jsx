@@ -1,7 +1,7 @@
 import { useNavigate } from "react-router";
 import "./Header.css";
 
-function Header({ user, onLogout, onReturnHome, isConnected, buzzerNotification }) {
+function Header({ user, onLogout, onReturnHome, isConnected, buzzerNotification, buzzerControl }) {
   const navigate = useNavigate();
 
   const handleLogout = () => {
@@ -41,6 +41,18 @@ function Header({ user, onLogout, onReturnHome, isConnected, buzzerNotification 
           <span className="buzzer-notification-text">
             🔔 {buzzerNotification.name} a buzzé !
           </span>
+        </div>
+      )}
+      
+      {/* Contrôle buzzer pour l'admin au centre */}
+      {buzzerControl && buzzerControl.gameState === 1 && !buzzerControl.buzzedPlayer && (
+        <div className="admin-buzzer-control">
+          <button 
+            onClick={buzzerControl.onToggle} 
+            className={`admin-buzzer-btn ${buzzerControl.enabled ? 'enabled' : 'disabled'}`}
+          >
+            {buzzerControl.enabled ? 'STOP' : 'GO CHRONO !!'}
+          </button>
         </div>
       )}
       

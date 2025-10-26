@@ -45,6 +45,44 @@
   }
 }
 
+.admin-buzzer-control {
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  transform: translate(-50%, -50%);
+  z-index: 101;
+}
+
+.admin-buzzer-btn {
+  background: linear-gradient(45deg, #2ecc71, #27ae60);
+  color: white;
+  border: none;
+  padding: 8px 20px;
+  border-radius: 25px;
+  font-family: 'Orbitron', monospace;
+  font-weight: bold;
+  font-size: 1rem;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  box-shadow: 0 4px 15px rgba(46, 204, 113, 0.3);
+}
+
+.admin-buzzer-btn.enabled {
+  background: linear-gradient(45deg, #e74c3c, #c0392b);
+  box-shadow: 0 4px 15px rgba(231, 76, 60, 0.3);
+}
+
+.admin-buzzer-btn:hover {
+  transform: scale(1.05);
+  box-shadow: 0 6px 20px rgba(46, 204, 113, 0.4);
+}
+
+.admin-buzzer-btn.enabled:hover {
+  box-shadow: 0 6px 20px rgba(231, 76, 60, 0.4);
+}
+
 .header-left {
   display: flex;
   align-items: center;

@@ -128,7 +128,7 @@ function AdminPage() {
     };
   }, [navigate]);
 
-  // Charger l'état du jeu au démarrage
+  // Charger l'état du jeu et des buzzers au démarrage
   useEffect(() => {
     const loadGameState = async () => {
       try {
@@ -136,6 +136,8 @@ function AdminPage() {
         if (response.ok) {
           const data = await response.json();
           setGameState(data.gameState);
+          setBuzzersEnabled(data.buzzersEnabled || false);
+          console.log("🎮 État du jeu chargé:", data.gameState, "Buzzers:", data.buzzersEnabled);
         }
       } catch (error) {
         console.error('Erreur lors du chargement de l\'état du jeu:', error);
@@ -185,6 +187,13 @@ function AdminPage() {
     if (isConnected) {
       console.log("🔄 Reset du buzzer par l'admin");
       socket.emit("resetBuzzer");
+      
+      // Désactiver les buzzers après reset
+      setBuzzersEnabled(false);
+      if (socket && socket.connected) {
+        socket.emit('buzzersStateChanged', { enabled: false });
+        console.log("🔔 Buzzers désactivés après reset");
+      }
     } else {
       console.log("❌ Pas connecté au serveur");
     }
@@ -360,6 +369,26 @@ function AdminPage() {
     }
   };
 
+  // Fonction pour réinitialiser tous les scores
+  const resetScores = async () => {
+    const confirmed = window.confirm('Êtes-vous sûr de vouloir réinitialiser tous les scores à 0 ?');
+    if (!confirmed) return;
+
+    const token = localStorage.getItem('token');
+    if (!token) return;
+
+    try {
+      // Mettre à jour les scores des deux équipes à 0
+      await updateScore('team1', 0);
+      await updateScore('team2', 0);
+      
+      console.log('✅ Tous les scores ont été réinitialisés à 0');
+    } catch (error) {
+      console.error('❌ Erreur lors de la réinitialisation des scores:', error);
+      alert('Erreur lors de la réinitialisation des scores');
+    }
+  };
+
   const validateResponse = async () => {
     if (!buzzedPlayer) return;
 
@@ -424,6 +453,12 @@ function AdminPage() {
         onLogout={handleLogout}
         onReturnHome={returnToHome}
         isConnected={isConnected}
+        buzzerControl={{
+          enabled: buzzersEnabled,
+          onToggle: toggleBuzzers,
+          gameState: gameState,
+          buzzedPlayer: buzzedPlayer
+        }}
       />
       <div className="admin-main-content">
         {isAuthenticated && user ? (
@@ -449,12 +484,6 @@ function AdminPage() {
                     <div className="game-controls-active">
                       <button onClick={stopGame} className="stop-game-btn">
                         🛑 Arrêter la Partie
-                      </button>
-                      <button 
-                        onClick={toggleBuzzers} 
-                        className={`buzzer-toggle-btn ${buzzersEnabled ? 'enabled' : 'disabled'}`}
-                      >
-                        {buzzersEnabled ? 'STOP' : 'GO CHRONO !!'}
                       </button>
                     </div>
                   )}
@@ -490,9 +519,14 @@ function AdminPage() {
             <div className="teams-display">
               <div className="teams-header">
                 <h2>Équipes</h2>
-                <button onClick={goToTeams} className="teams-btn">
-                  👥 Gestion des Équipes
-                </button>
+                <div className="teams-actions">
+                  <button onClick={goToTeams} className="teams-btn">
+                    Gestion des Équipes
+                  </button>
+                  <button onClick={resetScores} className="reset-scores-btn">
+                    Réinitialiser les Scores
+                  </button>
+                </div>
               </div>
               
               {/* Affichage des équipes si elles existent */}
