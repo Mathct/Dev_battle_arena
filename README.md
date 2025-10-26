@@ -4,25 +4,27 @@
 
 ### 🤔 Qu'est-ce qu'un WebSocket ?
 
-Imaginez que vous avez un **chat en direct** avec un ami. Avec un **WebSocket**, c'est exactement pareil entre votre navigateur et le serveur. Vous pouvez envoyer des messages et en recevoir **en même temps, instantanément** !
+Un **WebSocket** est une technologie qui permet à votre navigateur de rester **connecté en permanence** au serveur. 
+
+**En pratique :** C'est comme avoir une **ligne directe** qui reste toujours ouverte entre votre navigateur et le serveur. Quand vous appuyez sur le buzzer, l'admin le sait **instantanément** !
 
 ### 🔄 Comparaison simple : HTTP vs WebSocket
 
-#### HTTP (Comme envoyer un SMS)
+#### HTTP (Connexion fermée après chaque action)
 ```
-Vous → Serveur : "Donne-moi les données"
-Serveur → Vous : "Voici les données"
-[FIN - Vous devez envoyer un nouveau SMS pour la prochaine question]
+Joueur → Serveur : "J'ai buzzé !"
+Serveur → Joueur : "Message reçu"
+[CONNEXION FERMÉE - Le serveur ne répond qu'au joueur, pas à d'autres utilisateurs]
 ```
 
-#### WebSocket (Comme un chat en direct)
+#### WebSocket (Connexion permanente)
 ```
-Vous ↔ Serveur : Chat ouvert en permanence
-Vous : "Qui est connecté ?"
-Serveur : "Alice, Bob et Charlie"
-Vous : "Alice a buzzé !"
+Joueur ↔ Serveur : Ligne directe toujours ouverte
+Joueur : "J'ai buzzé !"
 Serveur : "Message reçu, je préviens l'admin"
-[LA CONVERSATION CONTINUE SANS INTERRUPTION]
+Serveur → Admin : "Alice a buzzé !"
+Admin : "Parfait, je vois qui a buzzé"
+[LA LIGNE RESTE OUVERTE POUR LA PROCHAINE ACTION]
 ```
 
 ### 🎯 Pourquoi WebSocket dans notre jeu ?
@@ -64,6 +66,11 @@ io.on('connection', (socket) => {
 });
 ```
 
+**Explication du code serveur :**
+- `io.on('connection')` = "Quand quelqu'un se connecte au serveur"
+- `socket.on('player-buzz')` = "Quand un joueur envoie un message 'player-buzz'"
+- `io.emit('buzzer-activated')` = "Envoyer le message 'buzzer-activated' à TOUS les clients connectés"
+
 #### 2. **Côté Client** (Frontend)
 ```javascript
 // Se connecter au serveur
@@ -82,6 +89,12 @@ const handleBuzz = () => {
   });
 };
 ```
+
+**Explication du code client :**
+- `io('http://localhost:3000')` = "Se connecter au serveur sur le port 3000"
+- `socket.on('buzzer-activated')` = "Écouter les messages 'buzzer-activated' du serveur"
+- `socket.emit('player-buzz')` = "Envoyer un message 'player-buzz' au serveur"
+- `setBuzzedPlayer(data)` = "Mettre à jour l'interface pour afficher qui a buzzé"
 
 ### 🎮 Les 3 cas d'usage dans notre jeu
 
