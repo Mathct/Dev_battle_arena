@@ -64,7 +64,6 @@
 
 .stay-connected-btn:hover {
   background: linear-gradient(45deg, #27ae60, #229954);
-  transform: translateY(-2px);
   box-shadow: 0 5px 15px rgba(46, 204, 113, 0.4);
 }
 
@@ -82,7 +81,6 @@
 
 .logout-now-btn:hover {
   background: linear-gradient(45deg, #c0392b, #a93226);
-  transform: translateY(-2px);
   box-shadow: 0 5px 15px rgba(231, 76, 60, 0.4);
 }
 

@@ -22,7 +22,9 @@
 }
 
 .teams-header {
-  text-align: center;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
   margin-bottom: 20px;
 }
 
@@ -34,10 +36,22 @@
   text-shadow: 0 0 10px rgba(255, 215, 0, 0.5);
 }
 
+.return-btn {
+  background: linear-gradient(45deg, #6c5ce7, #a29bfe) !important;
+  font-size: 0.9rem !important;
+  padding: 8px 16px !important;
+}
+
+.return-btn:hover {
+  background: linear-gradient(45deg, #5f3dc4, #9775fa) !important;
+  box-shadow: 0 4px 15px rgba(108, 92, 231, 0.4);
+}
+
 
 .teams-controls {
   display: flex;
   justify-content: center;
+  margin-bottom: 20px;
 }
 
 .teams-btn {
@@ -56,8 +70,12 @@
 }
 
 .teams-btn:hover {
-  transform: translateY(-2px);
   box-shadow: 0 6px 20px rgba(255, 107, 107, 0.4);
+}
+
+.validate-btn:hover {
+  background: linear-gradient(45deg, #2e7d32, #1b5e20) !important;
+  box-shadow: 0 6px 20px rgba(46, 125, 50, 0.5);
 }
 
 .admin-btn {
@@ -119,7 +137,6 @@
 }
 
 .auth-button:hover {
-  transform: translateY(-2px);
   box-shadow: 0 6px 20px rgba(78, 205, 196, 0.4);
 }
 
@@ -142,7 +159,6 @@
 }
 
 .team-card:hover {
-  transform: translateY(-2px);
   box-shadow: 0 6px 25px rgba(0, 0, 0, 0.3);
 }
 
@@ -225,7 +241,6 @@
 
 .player-item:hover {
   background: rgba(255, 255, 255, 0.1);
-  transform: translateX(2px);
 }
 
 .player-info {
@@ -285,7 +300,6 @@
 }
 
 .assign-btn:hover {
-  transform: translateY(-1px);
   box-shadow: 0 3px 10px rgba(0, 0, 0, 0.3);
 }
 

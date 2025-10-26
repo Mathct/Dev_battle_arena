@@ -4,22 +4,6 @@
   width: 100%;
 }
 
-/* Reset et styles de base */
-* {
-  margin: 0;
-  padding: 0;
-  box-sizing: border-box;
-}
-
-body {
-  font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-  background: linear-gradient(135deg, #1a1a2e 0%, #16213e 50%, #0f3460 100%);
-  background-attachment: fixed;
-  color: #fff;
-  overflow-x: hidden;
-  min-height: 100vh;
-}
-
 /* Styles pour les transitions de pages */
 .page-transition {
   animation: fadeIn 0.3s ease-in-out;

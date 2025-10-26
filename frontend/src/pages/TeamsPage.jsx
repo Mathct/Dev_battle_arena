@@ -207,6 +207,9 @@ function TeamsPage() {
           <div className="teams-section">
             <div className="teams-header">
               <h1>Gestion des Équipes</h1>
+              <button onClick={goToAdmin} className="teams-btn admin-btn return-btn">
+                Retour
+              </button>
             </div>
 
             <div className="teams-controls">
@@ -215,10 +218,7 @@ function TeamsPage() {
                 className="teams-btn validate-btn"
                 disabled={isLoading}
               >
-                {isLoading ? 'Validation...' : '✅ Valider Équipes'}
-              </button>
-              <button onClick={goToAdmin} className="teams-btn admin-btn">
-                Retour à l'Admin
+                {isLoading ? 'Validation...' : '✅ Valider'}
               </button>
             </div>
 
