@@ -13,6 +13,7 @@ function AdminPage() {
   const navigate = useNavigate();
   const [isConnected, setIsConnected] = useState(false);
   const [players, setPlayers] = useState([]);
+  const [connectedPlayers, setConnectedPlayers] = useState(new Set());
   const [buzzedPlayer, setBuzzedPlayer] = useState(() => {
     // Récupérer l'état du buzzer depuis le localStorage au chargement
     const savedBuzzedPlayer = localStorage.getItem('buzzedPlayer');
@@ -82,6 +83,11 @@ function AdminPage() {
       console.log("📋 Liste des joueurs reçue (Admin):", playersList);
       setPlayers(playersList);
       
+      // Initialiser la liste des joueurs connectés avec tous les joueurs actuellement en ligne
+      const connectedPlayerNames = new Set(playersList.map(player => player.name));
+      setConnectedPlayers(connectedPlayerNames);
+      console.log("🟢 Joueurs connectés initialisés:", Array.from(connectedPlayerNames));
+      
       // Vérifier si un joueur a buzzé dans la liste
       const buzzedPlayerInList = playersList.find(player => player.buzzed);
       if (buzzedPlayerInList) {
@@ -89,6 +95,21 @@ function AdminPage() {
         setBuzzedPlayer(buzzedPlayerInList);
         localStorage.setItem('buzzedPlayer', JSON.stringify(buzzedPlayerInList));
       }
+    });
+
+    // Gestion des connexions/déconnexions des joueurs
+    socket.on("playerConnected", (playerName) => {
+      console.log("🟢 Joueur connecté:", playerName);
+      setConnectedPlayers(prev => new Set([...prev, playerName]));
+    });
+
+    socket.on("playerDisconnected", (playerName) => {
+      console.log("🔴 Joueur déconnecté:", playerName);
+      setConnectedPlayers(prev => {
+        const newSet = new Set(prev);
+        newSet.delete(playerName);
+        return newSet;
+      });
     });
 
     // Gestion du buzzer
@@ -452,8 +473,49 @@ function AdminPage() {
     console.log(`✅ Réponse validée ! ${buzzedPlayer.name} (${playerTeam}) gagne 1 point`);
   };
 
-  const rejectResponse = () => {
+  const rejectResponse = async () => {
     if (!buzzedPlayer) return;
+    
+    // Déterminer l'équipe du joueur qui a buzzé
+    const playerTeam = teams.team1.find(player => player.username === buzzedPlayer.name) ? 'team1' : 
+                      teams.team2.find(player => player.username === buzzedPlayer.name) ? 'team2' : null;
+    
+    if (playerTeam) {
+      // Donner un point à l'équipe adverse
+      const opponentTeam = playerTeam === 'team1' ? 'team2' : 'team1';
+      const newScore = scores[opponentTeam] + 1;
+      
+      try {
+        await updateScore(opponentTeam, newScore);
+        console.log(`❌ Réponse refusée ! ${opponentTeam} gagne 1 point (score: ${newScore})`);
+      } catch (error) {
+        console.error('❌ Erreur lors de l\'attribution du point à l\'équipe adverse:', error);
+      }
+    }
+    
+    // Appeler l'API pour marquer la réponse comme rejetée
+    try {
+      const token = localStorage.getItem('token');
+      if (token) {
+        const response = await fetch('http://localhost:3000/api/auth/reject-response', {
+          method: 'POST',
+          headers: {
+            'Authorization': `Bearer ${token}`,
+            'Content-Type': 'application/json'
+          },
+          body: JSON.stringify({ 
+            username: buzzedPlayer.name,
+            gameSessionId: 'default'
+          })
+        });
+        
+        if (response.ok) {
+          console.log('✅ Réponse marquée comme rejetée dans la base de données');
+        }
+      }
+    } catch (error) {
+      console.error('❌ Erreur lors du rejet de la réponse:', error);
+    }
     
     // Reset du buzzer après refus
     resetBuzzer();
@@ -618,7 +680,12 @@ function AdminPage() {
                       ) : (
                         teams.team1.map((player) => (
                           <div key={player.id} className={`team-player ${buzzedPlayer && buzzedPlayer.name === player.username ? 'buzzed' : ''}`}>
-                            {player.username}
+                            <span className={`player-name ${connectedPlayers.has(player.username) ? 'online' : 'offline'}`}>
+                              {player.username}
+                            </span>
+                            {connectedPlayers.has(player.username) && (
+                              <span className="online-indicator">🟢</span>
+                            )}
                             {buzzedPlayer && buzzedPlayer.name === player.username && (
                               <span className="buzzed-indicator">🔔</span>
                             )}
@@ -655,7 +722,12 @@ function AdminPage() {
                       ) : (
                         teams.team2.map((player) => (
                           <div key={player.id} className={`team-player ${buzzedPlayer && buzzedPlayer.name === player.username ? 'buzzed' : ''}`}>
-                            {player.username}
+                            <span className={`player-name ${connectedPlayers.has(player.username) ? 'online' : 'offline'}`}>
+                              {player.username}
+                            </span>
+                            {connectedPlayers.has(player.username) && (
+                              <span className="online-indicator">🟢</span>
+                            )}
                             {buzzedPlayer && buzzedPlayer.name === player.username && (
                               <span className="buzzed-indicator">🔔</span>
                             )}

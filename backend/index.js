@@ -177,6 +177,9 @@ io.on('connection', (socket) => {
       
       players.set(playerName, player);
       
+      // Émettre l'événement de connexion
+      io.emit('playerConnected', playerName);
+      
       // Notifier tous les clients de la mise à jour des joueurs
       const playersList = Array.from(players.values());
       io.emit('playersUpdate', playersList);
@@ -283,6 +286,9 @@ io.on('connection', (socket) => {
       // Supprimer le joueur de la liste
       players.delete(player.name);
       console.log(`📋 Liste des joueurs après suppression:`, Array.from(players.values()).map(p => p.name));
+      
+      // Émettre l'événement de déconnexion
+      io.emit('playerDisconnected', player.name);
       
       // Mettre à jour la liste des joueurs
       const playersList = Array.from(players.values());

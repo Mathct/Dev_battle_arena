@@ -132,7 +132,7 @@
 .team-display h3 {
   color: #fff;
   font-family: 'Orbitron', monospace;
-  font-size: 1.1rem;
+  font-size: 1.6rem;
   margin: 0;
 }
 
@@ -218,6 +218,39 @@
   border: 2px solid #ffd700;
   box-shadow: 0 0 10px rgba(255, 215, 0, 0.3);
   animation: pulse-gold 1.5s infinite;
+}
+
+.player-name {
+  flex: 1;
+  text-align: left;
+}
+
+.player-name.online {
+  color: #2ecc71;
+  font-weight: 900;
+  text-shadow: 0 0 5px rgba(46, 204, 113, 0.5);
+}
+
+.player-name.offline {
+  color: #95a5a6;
+  opacity: 0.7;
+}
+
+.online-indicator {
+  margin-right: 8px;
+  font-size: 0.8rem;
+  animation: onlinePulse 2s infinite;
+}
+
+@keyframes onlinePulse {
+  0%, 100% {
+    opacity: 1;
+    transform: scale(1);
+  }
+  50% {
+    opacity: 0.7;
+    transform: scale(0.9);
+  }
 }
 
 @keyframes pulse-gold {
