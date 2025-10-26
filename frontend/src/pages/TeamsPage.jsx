@@ -218,7 +218,7 @@ function TeamsPage() {
                 className="teams-btn validate-btn"
                 disabled={isLoading}
               >
-                {isLoading ? 'Validation...' : '✅ Valider'}
+                {isLoading ? 'Validation...' : '✅ Valider les équipes'}
               </button>
             </div>
 
