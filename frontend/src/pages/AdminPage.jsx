@@ -22,6 +22,8 @@ function AdminPage() {
   const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [hasJoinedGame, setHasJoinedGame] = useState(false);
   const [gameState, setGameState] = useState(0);
+  const [teams, setTeams] = useState({ team1: [], team2: [] });
+  const [scores, setScores] = useState({ team1: 0, team2: 0 });
   
   // Hook de déconnexion automatique (30 minutes d'inactivité, avertissement à 25 minutes)
   const { showWarning, warningCountdown, handleStayConnected, handleLogoutNow } = useAutoLogout(30, 5);
@@ -43,6 +45,10 @@ function AdminPage() {
           navigate('/game');
           return;
         }
+        
+        // Charger les équipes et les scores
+        fetchTeams(token);
+        fetchScores(token);
       } catch (error) {
         console.error('Erreur lors du parsing des données utilisateur:', error);
         localStorage.removeItem('token');
@@ -250,6 +256,85 @@ function AdminPage() {
     navigate('/teams');
   };
 
+  // Fonction pour récupérer les équipes assignées
+  const fetchTeams = async (token) => {
+    try {
+      const response = await fetch('http://localhost:3000/api/auth/teams', {
+        method: 'GET',
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json'
+        }
+      });
+
+      const data = await response.json();
+
+      if (data.success) {
+        setTeams(data.teams);
+        console.log('✅ Équipes chargées dans AdminPage:', data.teams);
+      } else {
+        console.error('❌ Erreur lors du chargement des équipes:', data.message);
+      }
+    } catch (error) {
+      console.error('❌ Erreur lors de la requête des équipes:', error);
+    }
+  };
+
+  // Fonction pour récupérer les scores des équipes
+  const fetchScores = async (token) => {
+    try {
+      const response = await fetch('http://localhost:3000/api/auth/scores', {
+        method: 'GET',
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json'
+        }
+      });
+
+      const data = await response.json();
+
+      if (data.success) {
+        setScores(data.scores);
+        console.log('✅ Scores chargés dans AdminPage:', data.scores);
+      } else {
+        console.error('❌ Erreur lors du chargement des scores:', data.message);
+      }
+    } catch (error) {
+      console.error('❌ Erreur lors de la requête des scores:', error);
+    }
+  };
+
+  // Fonction pour mettre à jour le score d'une équipe
+  const updateScore = async (teamName, newScore) => {
+    const token = localStorage.getItem('token');
+    if (!token) return;
+
+    try {
+      const response = await fetch(`http://localhost:3000/api/auth/scores/${teamName}`, {
+        method: 'PUT',
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({ score: newScore })
+      });
+
+      const data = await response.json();
+
+      if (data.success) {
+        setScores(prev => ({
+          ...prev,
+          [teamName]: newScore
+        }));
+        console.log('✅ Score mis à jour:', data.message);
+      } else {
+        console.error('❌ Erreur lors de la mise à jour du score:', data.message);
+      }
+    } catch (error) {
+      console.error('❌ Erreur lors de la requête de mise à jour:', error);
+    }
+  };
+
 
   return (
     <>
@@ -268,10 +353,100 @@ function AdminPage() {
       <div className="admin-main-content">
         {isAuthenticated && user ? (
           <div className="admin-section">
-            <div className="admin-controls">
-              <button onClick={goToTeams} className="teams-btn">
-                👥 Gestion des Équipes
-              </button>
+            {/* Section équipes - toujours visible */}
+            <div className="teams-display">
+              <div className="teams-header">
+                <h2>Équipes</h2>
+                <button onClick={goToTeams} className="teams-btn">
+                  👥 Gestion des Équipes
+                </button>
+              </div>
+              
+              {/* Affichage des équipes si elles existent */}
+              {(teams.team1.length > 0 || teams.team2.length > 0) && (
+                <div className="teams-container">
+                  <div className="team-display team-1">
+                    <div className="team-header">
+                      <h3>Équipe 1</h3>
+                      <div className="score-display">
+                        <span className="score-value">{scores.team1}</span>
+                        <div className="score-controls">
+                          <button 
+                            className="score-btn minus"
+                            onClick={() => updateScore('team1', Math.max(0, scores.team1 - 1))}
+                          >
+                            -
+                          </button>
+                          <button 
+                            className="score-btn plus"
+                            onClick={() => updateScore('team1', scores.team1 + 1)}
+                          >
+                            +
+                          </button>
+                        </div>
+                      </div>
+                    </div>
+                    <div className="team-players">
+                      {teams.team1.length === 0 ? (
+                        <p className="empty-team">Aucun joueur</p>
+                      ) : (
+                        teams.team1.map((player) => (
+                          <div key={player.id} className={`team-player ${buzzedPlayer && buzzedPlayer.name === player.username ? 'buzzed' : ''}`}>
+                            {player.username}
+                            {buzzedPlayer && buzzedPlayer.name === player.username && (
+                              <span className="buzzed-indicator">🔔</span>
+                            )}
+                          </div>
+                        ))
+                      )}
+                    </div>
+                  </div>
+                  
+                  <div className="team-display team-2">
+                    <div className="team-header">
+                      <h3>Équipe 2</h3>
+                      <div className="score-display">
+                        <span className="score-value">{scores.team2}</span>
+                        <div className="score-controls">
+                          <button 
+                            className="score-btn minus"
+                            onClick={() => updateScore('team2', Math.max(0, scores.team2 - 1))}
+                          >
+                            -
+                          </button>
+                          <button 
+                            className="score-btn plus"
+                            onClick={() => updateScore('team2', scores.team2 + 1)}
+                          >
+                            +
+                          </button>
+                        </div>
+                      </div>
+                    </div>
+                    <div className="team-players">
+                      {teams.team2.length === 0 ? (
+                        <p className="empty-team">Aucun joueur</p>
+                      ) : (
+                        teams.team2.map((player) => (
+                          <div key={player.id} className={`team-player ${buzzedPlayer && buzzedPlayer.name === player.username ? 'buzzed' : ''}`}>
+                            {player.username}
+                            {buzzedPlayer && buzzedPlayer.name === player.username && (
+                              <span className="buzzed-indicator">🔔</span>
+                            )}
+                          </div>
+                        ))
+                      )}
+                    </div>
+                  </div>
+                </div>
+              )}
+              
+              {/* Message si pas d'équipes */}
+              {teams.team1.length === 0 && teams.team2.length === 0 && (
+                <div className="no-teams-message">
+                  <p>Aucune équipe assignée. Cliquez sur "Gestion des Équipes" pour créer les équipes.</p>
+                </div>
+              )}
             </div>
 
             <div className="game-controls">

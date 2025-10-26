@@ -413,4 +413,144 @@ router.get('/teams', async (req, res) => {
   }
 });
 
+// Route pour récupérer les scores des équipes
+router.get('/scores', async (req, res) => {
+  try {
+    const token = req.headers.authorization?.split(' ')[1];
+
+    if (!token) {
+      return res.status(401).json({
+        success: false,
+        message: 'Token d\'authentification requis'
+      });
+    }
+
+    // Vérifier le token et le rôle admin
+    const decoded = jwt.verify(token, JWT_SECRET);
+    
+    // Récupérer les informations de l'utilisateur pour vérifier son rôle
+    const [users] = await pool.execute(
+      'SELECT id, username, email, role FROM users WHERE id = ?',
+      [decoded.userId]
+    );
+
+    if (users.length === 0) {
+      return res.status(401).json({
+        success: false,
+        message: 'Utilisateur non trouvé'
+      });
+    }
+
+    const currentUser = users[0];
+    
+    // Vérifier que l'utilisateur est admin
+    if (currentUser.role !== 'admin') {
+      return res.status(403).json({
+        success: false,
+        message: 'Accès refusé - Rôle administrateur requis'
+      });
+    }
+
+    // Récupérer les scores des équipes
+    const [scores] = await pool.execute(
+      'SELECT team_name, score FROM scores ORDER BY team_name'
+    );
+
+    // Organiser les données par équipe
+    const teamScores = {
+      team1: scores.find(score => score.team_name === 'team1')?.score || 0,
+      team2: scores.find(score => score.team_name === 'team2')?.score || 0
+    };
+
+    res.json({
+      success: true,
+      scores: teamScores
+    });
+
+  } catch (error) {
+    console.error('Erreur lors de la récupération des scores:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Erreur serveur lors de la récupération des scores'
+    });
+  }
+});
+
+// Route pour mettre à jour le score d'une équipe
+router.put('/scores/:teamName', async (req, res) => {
+  try {
+    const token = req.headers.authorization?.split(' ')[1];
+    const { teamName } = req.params;
+    const { score } = req.body;
+
+    if (!token) {
+      return res.status(401).json({
+        success: false,
+        message: 'Token d\'authentification requis'
+      });
+    }
+
+    // Vérifier le token et le rôle admin
+    const decoded = jwt.verify(token, JWT_SECRET);
+    
+    // Récupérer les informations de l'utilisateur pour vérifier son rôle
+    const [users] = await pool.execute(
+      'SELECT id, username, email, role FROM users WHERE id = ?',
+      [decoded.userId]
+    );
+
+    if (users.length === 0) {
+      return res.status(401).json({
+        success: false,
+        message: 'Utilisateur non trouvé'
+      });
+    }
+
+    const currentUser = users[0];
+    
+    // Vérifier que l'utilisateur est admin
+    if (currentUser.role !== 'admin') {
+      return res.status(403).json({
+        success: false,
+        message: 'Accès refusé - Rôle administrateur requis'
+      });
+    }
+
+    // Validation des données
+    if (!['team1', 'team2'].includes(teamName)) {
+      return res.status(400).json({
+        success: false,
+        message: 'Nom d\'équipe invalide'
+      });
+    }
+
+    if (typeof score !== 'number' || score < 0) {
+      return res.status(400).json({
+        success: false,
+        message: 'Score invalide'
+      });
+    }
+
+    // Mettre à jour le score
+    await pool.execute(
+      'UPDATE scores SET score = ? WHERE team_name = ?',
+      [score, teamName]
+    );
+
+    res.json({
+      success: true,
+      message: `Score de ${teamName} mis à jour`,
+      teamName,
+      score
+    });
+
+  } catch (error) {
+    console.error('Erreur lors de la mise à jour du score:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Erreur serveur lors de la mise à jour du score'
+    });
+  }
+});
+
 module.exports = router;

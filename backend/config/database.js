@@ -138,6 +138,40 @@ async function createGameTable() {
   }
 }
 
+// Fonction pour créer la table scores si elle n'existe pas
+async function createScoresTable() {
+  try {
+    const connection = await pool.getConnection();
+    
+    const createTableQuery = `
+      CREATE TABLE IF NOT EXISTS scores (
+        id INT AUTO_INCREMENT PRIMARY KEY,
+        team_name VARCHAR(50) UNIQUE NOT NULL,
+        score INT DEFAULT 0,
+        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+        updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
+      ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci
+    `;
+    
+    await connection.execute(createTableQuery);
+    
+    // Vérifier si les équipes existent, sinon les créer avec score 0
+    const [rows] = await connection.execute('SELECT COUNT(*) as count FROM scores');
+    if (rows[0].count === 0) {
+      await connection.execute('INSERT INTO scores (team_name, score) VALUES ("team1", 0)');
+      await connection.execute('INSERT INTO scores (team_name, score) VALUES ("team2", 0)');
+      console.log('✅ Scores des équipes initialisés à 0');
+    }
+    
+    console.log('✅ Table scores créée ou vérifiée avec succès');
+    connection.release();
+    return true;
+  } catch (error) {
+    console.error('❌ Erreur lors de la création de la table scores:', error.message);
+    return false;
+  }
+}
+
 
 
 module.exports = {
@@ -146,5 +180,6 @@ module.exports = {
   testConnection,
   createUsersTable,
   createTeamsTable,
-  createGameTable
+  createGameTable,
+  createScoresTable
 };
