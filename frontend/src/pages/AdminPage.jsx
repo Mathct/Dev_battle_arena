@@ -234,11 +234,10 @@ function AdminPage() {
   };
 
   const startGame = async () => {
-    // Vérifier si les équipes sont vides
-    if (teams.team1.length === 0 && teams.team2.length === 0) {
-      alert('❌ Impossible de démarrer la partie : Aucune équipe n\'est assignée. Veuillez d\'abord assigner des joueurs aux équipes.');
-      return;
-    }
+    // Debug: Afficher les équipes
+    console.log('🔍 Équipes actuelles:', teams);
+    console.log('🔍 Équipe 1:', teams.team1.length, 'joueurs');
+    console.log('🔍 Équipe 2:', teams.team2.length, 'joueurs');
 
     try {
       const response = await fetch('http://localhost:3000/api/game/state', {
@@ -527,10 +526,10 @@ function AdminPage() {
                   {gameState === 0 ? (
                     <button 
                       onClick={startGame} 
-                      className={`start-game-btn ${teams.team1.length === 0 && teams.team2.length === 0 ? 'disabled' : ''}`}
-                      disabled={teams.team1.length === 0 && teams.team2.length === 0}
+                      className={`start-game-btn ${teams.team1.length === 0 || teams.team2.length === 0 ? 'disabled' : ''}`}
+                      disabled={teams.team1.length === 0 || teams.team2.length === 0}
                     >
-                      {teams.team1.length === 0 && teams.team2.length === 0 ? '❌ Aucune équipe assignée' : '🚀 Démarrer la Partie - Afficher les buzzers'}
+                      {teams.team1.length === 0 || teams.team2.length === 0 ? '❌ Équipes incomplètes' : '🚀 Démarrer la Partie - Afficher les buzzers'}
                     </button>
                   ) : (
                     <div className="game-controls-active">
