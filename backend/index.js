@@ -93,10 +93,21 @@ app.post('/api/game/state', async (req, res) => {
     await connection.execute('UPDATE game SET game_state = ? WHERE id = (SELECT id FROM (SELECT id FROM game ORDER BY id DESC LIMIT 1) as subquery)', [gameState]);
     connection.release();
     
-    // Si la partie s'arrête, désactiver les buzzers
+    // Si la partie s'arrête, désactiver les buzzers et reset le buzzer
     if (gameState === 0) {
       buzzersEnabled = false;
-      console.log('🛑 Partie arrêtée - Désactivation des buzzers');
+      buzzedPlayer = null; // Annuler le buzz en cours
+      
+      // Reset tous les joueurs
+      players.forEach((player) => {
+        player.buzzed = false;
+        players.set(player.name, player);
+      });
+      
+      console.log('🛑 Partie arrêtée - Désactivation des buzzers et reset du buzzer');
+      // Notifier tous les clients que les buzzers sont désactivés et reset le buzzer
+      io.emit('buzzersStateChanged', { enabled: false });
+      io.emit('buzzerReset');
     }
     
     // Notifier tous les clients du changement d'état

@@ -243,14 +243,16 @@ function AdminPage() {
       if (response.ok) {
         setGameState(0);
         setBuzzersEnabled(false); // Désactiver les buzzers à l'arrêt
+        setBuzzedPlayer(null); // Annuler le buzz en cours
         
         // Notifier tous les joueurs que les buzzers sont désactivés
         if (socket && socket.connected) {
           socket.emit('buzzersStateChanged', { enabled: false });
-          console.log("🔔 Buzzers désactivés envoyés à tous les joueurs");
+          socket.emit('resetBuzzer'); // Reset du buzzer pour tous les joueurs
+          console.log("🔔 Buzzers désactivés et buzzer reset envoyés à tous les joueurs");
         }
         
-        console.log("🛑 Partie arrêtée par l'admin");
+        console.log("🛑 Partie arrêtée par l'admin - Buzzer annulé");
       } else {
         alert('Erreur lors de l\'arrêt de la partie');
       }
