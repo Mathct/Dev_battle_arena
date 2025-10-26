@@ -21,6 +21,7 @@ function GamePage() {
   const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [hasJoinedGame, setHasJoinedGame] = useState(false);
   const [gameState, setGameState] = useState(0);
+  const [buzzersEnabled, setBuzzersEnabled] = useState(false);
   
   // Hook de déconnexion automatique (30 minutes d'inactivité, avertissement à 25 minutes)
   const { showWarning, warningCountdown, handleStayConnected, handleLogoutNow } = useAutoLogout(30, 5);
@@ -91,6 +92,13 @@ function GamePage() {
       console.log("🎮 État du jeu changé:", data.gameState);
     });
 
+    // Écouter les changements d'état des buzzers
+    socket.on("buzzersStateChanged", (data) => {
+      console.log("🔔 Événement buzzersStateChanged reçu:", data);
+      setBuzzersEnabled(data.enabled);
+      console.log("🔔 État des buzzers changé:", data.enabled);
+    });
+
 
     // Nettoyage
     return () => {
@@ -99,6 +107,7 @@ function GamePage() {
       socket.off("playerBuzzed");
       socket.off("buzzerReset");
       socket.off("gameStateChanged");
+      socket.off("buzzersStateChanged");
     };
   }, [navigate]);
 
@@ -157,12 +166,18 @@ function GamePage() {
   }, [isAuthenticated, user, isConnected]);
 
   const buzz = () => {
-    if (isConnected) {
-      console.log("🔔 Tentative de buzzer...");
-      socket.emit("buzz");
-    } else {
+    if (!isConnected) {
       console.log("❌ Pas connecté au serveur");
+      return;
     }
+    
+    if (!buzzersEnabled) {
+      console.log("❌ Les buzzers ne sont pas activés");
+      return;
+    }
+    
+    console.log("🔔 Tentative de buzzer...");
+    socket.emit("buzz");
   };
 
 
@@ -202,6 +217,7 @@ function GamePage() {
         onLogout={handleLogout}
         onReturnHome={returnToHome}
         isConnected={isConnected}
+        buzzerNotification={buzzedPlayer}
       />
       <div className="game-main-content">
 
@@ -216,18 +232,11 @@ function GamePage() {
               <h2 className="buzzer-title">Votre Buzzer</h2>
               <button 
                 onClick={buzz}
-                disabled={!isConnected || buzzedPlayer}
-                className={`buzzer-button ${buzzedPlayer ? 'disabled' : ''}`}
+                disabled={!isConnected || buzzedPlayer || !buzzersEnabled}
+                className={`buzzer-button ${buzzedPlayer || !buzzersEnabled ? 'disabled' : ''}`}
               >
-                BUZZER
+                {!buzzersEnabled ? 'BUZZER DÉSACTIVÉ' : 'BUZZER'}
               </button>
-              {buzzedPlayer && (
-                <div className="buzzed-info">
-                  <p className="buzzed-player">
-                    🔔 {buzzedPlayer.name} a buzzé !
-                  </p>
-                </div>
-              )}
             </>
           )}
         </>

@@ -10,6 +10,41 @@
   z-index: 100;
 }
 
+.buzzer-notification {
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  transform: translate(-50%, -50%);
+  background: linear-gradient(45deg, #ffd700, #ffed4e);
+  color: #000;
+  padding: 8px 20px;
+  border-radius: 25px;
+  font-family: 'Orbitron', monospace;
+  font-weight: bold;
+  font-size: 1.1rem;
+  box-shadow: 0 4px 15px rgba(255, 215, 0, 0.4);
+  animation: buzzerPulse 0.5s ease-in-out;
+  z-index: 101;
+}
+
+.buzzer-notification-text {
+  white-space: nowrap;
+}
+
+@keyframes buzzerPulse {
+  0% {
+    transform: translate(-50%, -50%) scale(0.8);
+    opacity: 0;
+  }
+  50% {
+    transform: translate(-50%, -50%) scale(1.1);
+  }
+  100% {
+    transform: translate(-50%, -50%) scale(1);
+    opacity: 1;
+  }
+}
+
 .header-left {
   display: flex;
   align-items: center;

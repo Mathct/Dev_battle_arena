@@ -24,6 +24,7 @@ function AdminPage() {
   const [gameState, setGameState] = useState(0);
   const [teams, setTeams] = useState({ team1: [], team2: [] });
   const [scores, setScores] = useState({ team1: 0, team2: 0 });
+  const [buzzersEnabled, setBuzzersEnabled] = useState(false);
   
   // Hook de déconnexion automatique (30 minutes d'inactivité, avertissement à 25 minutes)
   const { showWarning, warningCountdown, handleStayConnected, handleLogoutNow } = useAutoLogout(30, 5);
@@ -109,6 +110,12 @@ function AdminPage() {
       console.log("🎮 État du jeu changé (Admin):", data.gameState);
     });
 
+    // Écouter les changements d'état des buzzers
+    socket.on("buzzersStateChanged", (data) => {
+      setBuzzersEnabled(data.enabled);
+      console.log("🔔 État des buzzers reçu (Admin):", data.enabled);
+    });
+
     // Nettoyage
     return () => {
       socket.off("connect");
@@ -117,6 +124,7 @@ function AdminPage() {
       socket.off("playerBuzzed");
       socket.off("buzzerReset");
       socket.off("gameStateChanged");
+      socket.off("buzzersStateChanged");
     };
   }, [navigate]);
 
@@ -200,6 +208,8 @@ function AdminPage() {
       });
 
       if (response.ok) {
+        setGameState(1);
+        setBuzzersEnabled(false); // Désactiver les buzzers au démarrage
         console.log("🎮 Partie démarrée par l'admin");
       } else {
         alert('Erreur lors du démarrage de la partie');
@@ -222,6 +232,15 @@ function AdminPage() {
       });
 
       if (response.ok) {
+        setGameState(0);
+        setBuzzersEnabled(false); // Désactiver les buzzers à l'arrêt
+        
+        // Notifier tous les joueurs que les buzzers sont désactivés
+        if (socket && socket.connected) {
+          socket.emit('buzzersStateChanged', { enabled: false });
+          console.log("🔔 Buzzers désactivés envoyés à tous les joueurs");
+        }
+        
         console.log("🛑 Partie arrêtée par l'admin");
       } else {
         alert('Erreur lors de l\'arrêt de la partie');
@@ -376,6 +395,21 @@ function AdminPage() {
     console.log(`❌ Réponse refusée pour ${buzzedPlayer.name}`);
   };
 
+  const toggleBuzzers = () => {
+    const newState = !buzzersEnabled;
+    setBuzzersEnabled(newState);
+    
+    // Envoyer l'état des buzzers à tous les clients
+    if (socket && socket.connected) {
+      socket.emit('buzzersStateChanged', { enabled: newState });
+      console.log(`🔔 État des buzzers envoyé: ${newState ? 'activés' : 'désactivés'}`);
+    } else {
+      console.log('❌ Socket non connecté');
+    }
+    
+    console.log(`🔔 Buzzers ${newState ? 'activés' : 'désactivés'}`);
+  };
+
 
   return (
     <>
@@ -409,12 +443,20 @@ function AdminPage() {
                       className={`start-game-btn ${teams.team1.length === 0 && teams.team2.length === 0 ? 'disabled' : ''}`}
                       disabled={teams.team1.length === 0 && teams.team2.length === 0}
                     >
-                      {teams.team1.length === 0 && teams.team2.length === 0 ? '❌ Aucune équipe assignée' : '🚀 Démarrer la Partie'}
+                      {teams.team1.length === 0 && teams.team2.length === 0 ? '❌ Aucune équipe assignée' : '🚀 Démarrer la Partie - Afficher les buzzers'}
                     </button>
                   ) : (
-                    <button onClick={stopGame} className="stop-game-btn">
-                      🛑 Arrêter la Partie
-                    </button>
+                    <div className="game-controls-active">
+                      <button onClick={stopGame} className="stop-game-btn">
+                        🛑 Arrêter la Partie
+                      </button>
+                      <button 
+                        onClick={toggleBuzzers} 
+                        className={`buzzer-toggle-btn ${buzzersEnabled ? 'enabled' : 'disabled'}`}
+                      >
+                        {buzzersEnabled ? 'STOP' : 'GO CHRONO !!'}
+                      </button>
+                    </div>
                   )}
                 </div>
               </div>

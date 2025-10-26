@@ -1,7 +1,7 @@
 import { useNavigate } from "react-router";
 import "./Header.css";
 
-function Header({ user, onLogout, onReturnHome, isConnected }) {
+function Header({ user, onLogout, onReturnHome, isConnected, buzzerNotification }) {
   const navigate = useNavigate();
 
   const handleLogout = () => {
@@ -34,6 +34,15 @@ function Header({ user, onLogout, onReturnHome, isConnected }) {
           onClick={handleReturnHome}
         />
       </div>
+      
+      {/* Notification de buzzer au centre */}
+      {buzzerNotification && (
+        <div className="buzzer-notification">
+          <span className="buzzer-notification-text">
+            🔔 {buzzerNotification.name} a buzzé !
+          </span>
+        </div>
+      )}
       
       <div className="header-right">
         <div className="header-controls">

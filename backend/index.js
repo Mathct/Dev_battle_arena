@@ -225,6 +225,15 @@ io.on('connection', (socket) => {
     console.log(`📡 Liste des joueurs envoyée après reset:`, playersList.map(p => ({ name: p.name, buzzed: p.buzzed })));
   });
 
+  // Gestion de l'état des buzzers
+  socket.on('buzzersStateChanged', (data) => {
+    console.log(`🔔 État des buzzers changé: ${data.enabled ? 'activés' : 'désactivés'}`);
+    console.log(`📡 Diffusion de l'état des buzzers à tous les clients...`);
+    // Diffuser l'état des buzzers à tous les clients
+    io.emit('buzzersStateChanged', { enabled: data.enabled });
+    console.log(`✅ État des buzzers diffusé avec succès`);
+  });
+
 
 
   // Gérer la déconnexion

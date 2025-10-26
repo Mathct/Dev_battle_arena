@@ -74,12 +74,13 @@
 /* Titre du buzzer */
 .buzzer-title {
   font-size: 2.5rem;
-  margin-bottom: 30px;
+  margin-bottom: 20px;
   color: #ffd700;
   font-family: 'Orbitron', monospace;
   text-shadow: 0 0 10px rgba(255, 215, 0, 0.5);
   text-align: center;
 }
+
 
 /* Styles pour l'affichage du buzzer */
 .buzzed-info {
