@@ -168,7 +168,7 @@ function HomePage() {
                 <input
                   type="text"
                   name="username"
-                  placeholder="Nom d'utilisateur"
+                  placeholder={isLogin ? "Nom d'utilisateur ou Email" : "Nom d'utilisateur"}
                   value={formData.username}
                   onChange={handleInputChange}
                   required

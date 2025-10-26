@@ -814,3 +814,20 @@
     font-size: 1.1rem;
   }
 }
+
+/* Styles pour les boutons désactivés */
+.teams-btn.disabled,
+.reset-scores-btn.disabled {
+  background: linear-gradient(45deg, #666, #555) !important;
+  color: #999 !important;
+  cursor: not-allowed !important;
+  opacity: 0.6 !important;
+  box-shadow: none !important;
+}
+
+.teams-btn.disabled:hover,
+.reset-scores-btn.disabled:hover {
+  background: linear-gradient(45deg, #666, #555) !important;
+  transform: none !important;
+  box-shadow: none !important;
+}

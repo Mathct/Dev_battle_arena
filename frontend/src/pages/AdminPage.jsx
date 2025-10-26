@@ -572,10 +572,18 @@ function AdminPage() {
               <div className="teams-header">
                 <h2>Équipes</h2>
                 <div className="teams-actions">
-                  <button onClick={goToTeams} className="teams-btn">
+                  <button 
+                    onClick={goToTeams} 
+                    className={`teams-btn ${gameState === 1 ? 'disabled' : ''}`}
+                    disabled={gameState === 1}
+                  >
                     Gestion des Équipes
                   </button>
-                  <button onClick={resetScores} className="reset-scores-btn">
+                  <button 
+                    onClick={resetScores} 
+                    className={`reset-scores-btn ${gameState === 1 ? 'disabled' : ''}`}
+                    disabled={gameState === 1}
+                  >
                     Réinitialiser les Scores
                   </button>
                 </div>
