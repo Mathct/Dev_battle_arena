@@ -22,6 +22,7 @@ function GamePage() {
   const [hasJoinedGame, setHasJoinedGame] = useState(false);
   const [gameState, setGameState] = useState(0);
   const [buzzersEnabled, setBuzzersEnabled] = useState(false);
+  const [countdown, setCountdown] = useState(0);
   
   // Hook de déconnexion automatique (30 minutes d'inactivité, avertissement à 25 minutes)
   const { showWarning, warningCountdown, handleStayConnected, handleLogoutNow } = useAutoLogout(30, 5);
@@ -99,6 +100,13 @@ function GamePage() {
       console.log("🔔 État des buzzers changé:", data.enabled);
     });
 
+    // Écouter le chrono depuis l'admin
+    socket.on("countdownUpdate", (data) => {
+      console.log("⏱️ Chrono reçu:", data.countdown);
+      console.log("⏱️ Mise à jour du countdown state:", data.countdown);
+      setCountdown(data.countdown);
+    });
+
 
     // Nettoyage
     return () => {
@@ -108,6 +116,7 @@ function GamePage() {
       socket.off("buzzerReset");
       socket.off("gameStateChanged");
       socket.off("buzzersStateChanged");
+      socket.off("countdownUpdate");
     };
   }, [navigate]);
 
@@ -129,6 +138,22 @@ function GamePage() {
     
     loadGameState();
   }, []);
+
+  // Gestion du compte à rebours
+  useEffect(() => {
+    let interval;
+    if (countdown > 0) {
+      interval = setInterval(() => {
+        setCountdown(prev => {
+          if (prev <= 0.01) {
+            return 0;
+          }
+          return prev - 0.01;
+        });
+      }, 10); // Mise à jour toutes les 10ms pour les centièmes
+    }
+    return () => clearInterval(interval);
+  }, [countdown]);
 
   // Rejoindre automatiquement quand l'utilisateur est défini et connecté
   useEffect(() => {
@@ -220,6 +245,7 @@ function GamePage() {
         onReturnHome={returnToHome}
         isConnected={isConnected}
         buzzerNotification={buzzedPlayer}
+        countdown={countdown}
       />
       <div className="game-main-content">
 

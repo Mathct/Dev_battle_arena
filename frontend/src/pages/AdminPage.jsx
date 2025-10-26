@@ -25,6 +25,7 @@ function AdminPage() {
   const [teams, setTeams] = useState({ team1: [], team2: [] });
   const [scores, setScores] = useState({ team1: 0, team2: 0 });
   const [buzzersEnabled, setBuzzersEnabled] = useState(false);
+  const [countdown, setCountdown] = useState(0);
   
   // Hook de déconnexion automatique (30 minutes d'inactivité, avertissement à 25 minutes)
   const { showWarning, warningCountdown, handleStayConnected, handleLogoutNow } = useAutoLogout(30, 5);
@@ -95,6 +96,17 @@ function AdminPage() {
       setBuzzedPlayer(player);
       localStorage.setItem('buzzedPlayer', JSON.stringify(player));
       console.log("🔔 État du buzzer reçu (Admin):", player);
+      
+      // Arrêter le chrono quand un joueur buzz
+      setCountdown(0);
+      setBuzzersEnabled(false);
+      
+      // Envoyer l'arrêt du chrono aux utilisateurs
+      if (socket && socket.connected) {
+        socket.emit('countdownUpdate', { countdown: 0 });
+        socket.emit('buzzersStateChanged', { enabled: false });
+        console.log("⏱️ Chrono arrêté automatiquement après buzz");
+      }
     });
 
     // Reset du buzzer
@@ -160,6 +172,26 @@ function AdminPage() {
     }
   }, [isAuthenticated, user, isConnected, hasJoinedGame]);
 
+  // Gestion du compte à rebours
+  useEffect(() => {
+    let interval;
+    if (countdown > 0) {
+      interval = setInterval(() => {
+        setCountdown(prev => {
+          const newCountdown = prev <= 0.01 ? 0 : prev - 0.01;
+          
+          // Envoyer le chrono aux utilisateurs à chaque mise à jour
+          if (socket && socket.connected) {
+            socket.emit('countdownUpdate', { countdown: newCountdown });
+          }
+          
+          return newCountdown;
+        });
+      }, 10); // Mise à jour toutes les 10ms pour les centièmes
+    }
+    return () => clearInterval(interval);
+  }, [countdown]);
+
   // Éviter les reconnexions multiples
   useEffect(() => {
     const handleVisibilityChange = () => {
@@ -188,11 +220,13 @@ function AdminPage() {
       console.log("🔄 Reset du buzzer par l'admin");
       socket.emit("resetBuzzer");
       
-      // Désactiver les buzzers après reset
+      // Désactiver les buzzers et arrêter le chrono après reset
       setBuzzersEnabled(false);
+      setCountdown(0);
       if (socket && socket.connected) {
         socket.emit('buzzersStateChanged', { enabled: false });
-        console.log("🔔 Buzzers désactivés après reset");
+        socket.emit('countdownUpdate', { countdown: 0 });
+        console.log("🔔 Buzzers désactivés et chrono arrêté après reset");
       }
     } else {
       console.log("❌ Pas connecté au serveur");
@@ -244,12 +278,14 @@ function AdminPage() {
         setGameState(0);
         setBuzzersEnabled(false); // Désactiver les buzzers à l'arrêt
         setBuzzedPlayer(null); // Annuler le buzz en cours
+        setCountdown(0); // Arrêter le chrono
         
         // Notifier tous les joueurs que les buzzers sont désactivés
         if (socket && socket.connected) {
           socket.emit('buzzersStateChanged', { enabled: false });
+          socket.emit('countdownUpdate', { countdown: 0 });
           socket.emit('resetBuzzer'); // Reset du buzzer pour tous les joueurs
-          console.log("🔔 Buzzers désactivés et buzzer reset envoyés à tous les joueurs");
+          console.log("🔔 Buzzers désactivés, chrono arrêté et buzzer reset envoyés à tous les joueurs");
         }
         
         console.log("🛑 Partie arrêtée par l'admin - Buzzer annulé");
@@ -430,9 +466,22 @@ function AdminPage() {
     const newState = !buzzersEnabled;
     setBuzzersEnabled(newState);
     
+    // Démarrer le compte à rebours de 5 secondes quand on active les buzzers
+    if (newState) {
+      setCountdown(5.00);
+    } else {
+      setCountdown(0);
+    }
+    
     // Envoyer l'état des buzzers à tous les clients
     if (socket && socket.connected) {
       socket.emit('buzzersStateChanged', { enabled: newState });
+      // Envoyer le chrono aux utilisateurs
+      if (newState) {
+        socket.emit('countdownUpdate', { countdown: 5.00 });
+      } else {
+        socket.emit('countdownUpdate', { countdown: 0 });
+      }
       console.log(`🔔 État des buzzers envoyé: ${newState ? 'activés' : 'désactivés'}`);
     } else {
       console.log('❌ Socket non connecté');
@@ -459,7 +508,8 @@ function AdminPage() {
           enabled: buzzersEnabled,
           onToggle: toggleBuzzers,
           gameState: gameState,
-          buzzedPlayer: buzzedPlayer
+          buzzedPlayer: buzzedPlayer,
+          countdown: countdown
         }}
       />
       <div className="admin-main-content">
@@ -485,7 +535,7 @@ function AdminPage() {
                   ) : (
                     <div className="game-controls-active">
                       <button onClick={stopGame} className="stop-game-btn">
-                        🛑 Arrêter la Partie
+                        🛑 Arrêter la Partie - Masquer les buzzers
                       </button>
                     </div>
                   )}

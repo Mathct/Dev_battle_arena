@@ -1,7 +1,7 @@
 import { useNavigate } from "react-router";
 import "./Header.css";
 
-function Header({ user, onLogout, onReturnHome, isConnected, buzzerNotification, buzzerControl }) {
+function Header({ user, onLogout, onReturnHome, isConnected, buzzerNotification, buzzerControl, countdown }) {
   const navigate = useNavigate();
 
   const handleLogout = () => {
@@ -44,14 +44,33 @@ function Header({ user, onLogout, onReturnHome, isConnected, buzzerNotification,
         </div>
       )}
       
+      {/* Chrono pour les utilisateurs */}
+      {countdown > 0 && !buzzerControl && (
+        <div className="user-countdown-display">
+          <span className="user-countdown-text">
+            {countdown.toFixed(2)}
+          </span>
+        </div>
+      )}
+      
+      {/* Debug: Afficher la valeur du countdown */}
+      {console.log("Header - countdown:", countdown, "buzzerControl:", buzzerControl)}
+      
       {/* Contrôle buzzer pour l'admin au centre */}
       {buzzerControl && buzzerControl.gameState === 1 && !buzzerControl.buzzedPlayer && (
         <div className="admin-buzzer-control">
+          {buzzerControl.countdown > 0 && (
+            <div className="countdown-display">
+              <span className="countdown-text">
+                {buzzerControl.countdown.toFixed(2)}
+              </span>
+            </div>
+          )}
           <button 
             onClick={buzzerControl.onToggle} 
             className={`admin-buzzer-btn ${buzzerControl.enabled ? 'enabled' : 'disabled'}`}
           >
-            {buzzerControl.enabled ? 'STOP' : 'GO CHRONO !!'}
+            {buzzerControl.enabled ? 'STOP' : 'GO CHRONO'}
           </button>
         </div>
       )}

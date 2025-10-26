@@ -253,6 +253,15 @@ io.on('connection', (socket) => {
     console.log(`✅ État des buzzers diffusé avec succès`);
   });
 
+  // Gestion du chrono
+  socket.on('countdownUpdate', (data) => {
+    console.log(`⏱️ Chrono reçu: ${data.countdown}`);
+    console.log(`📡 Diffusion du chrono à tous les clients...`);
+    // Diffuser le chrono à tous les clients
+    io.emit('countdownUpdate', { countdown: data.countdown });
+    console.log(`✅ Chrono diffusé avec succès`);
+  });
+
 
 
   // Gérer la déconnexion

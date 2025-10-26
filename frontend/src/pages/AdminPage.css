@@ -401,8 +401,8 @@
 .game-controls-active .stop-game-btn,
 .game-controls-active .buzzer-toggle-btn {
   flex: 1;
-  max-width: 250px;
-  min-width: 220px;
+  max-width: 500px;
+  min-width: 450px;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -705,17 +705,19 @@
 /* Responsive */
 @media (max-width: 768px) {
   .admin-main-content {
-    padding: 15px;
+    padding: 10px;
+    min-height: auto;
   }
   
   .admin-section {
-    padding: 20px;
+    padding: 15px;
+    margin-bottom: 20px;
   }
   
   .players-list {
     grid-template-columns: 1fr;
+    gap: 10px;
   }
-  
   
   .teams-container {
     grid-template-columns: 1fr;
@@ -724,10 +726,91 @@
   
   .teams-display h2 {
     font-size: 1.3rem;
+    margin-bottom: 15px;
   }
   
   .game-status-container {
     grid-template-columns: 1fr;
     gap: 15px;
+    margin-bottom: 20px;
+  }
+  
+  .game-controls-active {
+    flex-direction: column;
+    gap: 10px;
+    padding: 0 10px;
+  }
+  
+  .game-controls-active .stop-game-btn,
+  .game-controls-active .buzzer-toggle-btn {
+    max-width: 100%;
+    min-width: 200px;
+    padding: 10px 15px;
+    font-size: 0.75rem;
+    width: 100%;
+  }
+  
+  .stop-game-btn {
+    padding: 10px 15px;
+    font-size: 0.75rem;
+  }
+  
+  .teams-actions {
+    flex-direction: column;
+    gap: 10px;
+    align-items: center;
+  }
+  
+  .teams-btn,
+  .reset-scores-btn {
+    width: 100%;
+    max-width: 300px;
+  }
+}
+
+@media (max-width: 480px) {
+  .admin-main-content {
+    padding: 5px;
+  }
+  
+  .admin-section {
+    padding: 10px;
+    margin-bottom: 15px;
+  }
+  
+  .game-status-container {
+    gap: 10px;
+    margin-bottom: 15px;
+  }
+  
+  .game-controls-active {
+    padding: 0 5px;
+  }
+  
+  .game-controls-active .stop-game-btn,
+  .game-controls-active .buzzer-toggle-btn {
+    min-width: 150px;
+    padding: 8px 12px;
+    font-size: 0.7rem;
+    width: 100%;
+  }
+  
+  .stop-game-btn {
+    padding: 8px 12px;
+    font-size: 0.7rem;
+  }
+  
+  .teams-actions {
+    gap: 8px;
+  }
+  
+  .teams-btn,
+  .reset-scores-btn {
+    max-width: 250px;
+    font-size: 0.8rem;
+  }
+  
+  .teams-display h2 {
+    font-size: 1.1rem;
   }
 }
