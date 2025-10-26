@@ -494,7 +494,7 @@ function AdminPage() {
 
               {buzzedPlayer ? (
                 <div className="buzzed-info">
-                  <h2>🎉 {buzzedPlayer.name} a buzzé</h2>
+                  <h2>🔔 {buzzedPlayer.name} a buzzé</h2>
                   <div className="buzzed-player-card">
                     <div className="buzzer-actions">
                       <button onClick={validateResponse} className="validate-response-btn">
