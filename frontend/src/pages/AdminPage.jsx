@@ -353,6 +353,44 @@ function AdminPage() {
       <div className="admin-main-content">
         {isAuthenticated && user ? (
           <div className="admin-section">
+            <div className="game-status-container">
+              <div className="game-controls">
+                <h2>Contrôle de la Partie</h2>
+                <div className="game-state-info">
+                  <p>État actuel: <span className={`state-indicator ${gameState === 1 ? 'active' : 'waiting'}`}>
+                    {gameState === 1 ? '🎮 Partie en cours' : '⏳ En attente'}
+                  </span></p>
+                </div>
+                <div className="game-buttons">
+                  {gameState === 0 ? (
+                    <button onClick={startGame} className="start-game-btn">
+                      🚀 Démarrer la Partie
+                    </button>
+                  ) : (
+                    <button onClick={stopGame} className="stop-game-btn">
+                      🛑 Arrêter la Partie
+                    </button>
+                  )}
+                </div>
+              </div>
+
+              {buzzedPlayer ? (
+                <div className="buzzed-info">
+                  <h2>🎉 {buzzedPlayer.name} a buzzé</h2>
+                  <div className="buzzed-player-card">
+                    <button onClick={resetBuzzer} className="reset-button admin-reset">
+                      🔄 Reset Buzzer
+                    </button>
+                  </div>
+                </div>
+              ) : (
+                <div className="waiting-info">
+                  <h2>⏳ En attente</h2>
+                  <p>Aucun joueur n'a encore buzzé...</p>
+                </div>
+              )}
+            </div>
+
             {/* Section équipes - toujours visible */}
             <div className="teams-display">
               <div className="teams-header">
@@ -448,45 +486,6 @@ function AdminPage() {
                 </div>
               )}
             </div>
-
-            <div className="game-controls">
-              <h2>Contrôle de la Partie</h2>
-              <div className="game-state-info">
-                <p>État actuel: <span className={`state-indicator ${gameState === 1 ? 'active' : 'waiting'}`}>
-                  {gameState === 1 ? '🎮 Partie en cours' : '⏳ En attente'}
-                </span></p>
-              </div>
-              <div className="game-buttons">
-                {gameState === 0 ? (
-                  <button onClick={startGame} className="start-game-btn">
-                    🚀 Démarrer la Partie
-                  </button>
-                ) : (
-                  <button onClick={stopGame} className="stop-game-btn">
-                    🛑 Arrêter la Partie
-                  </button>
-                )}
-              </div>
-            </div>
-
-            {buzzedPlayer && (
-              <div className="buzzed-info">
-                <h2>🎉 Joueur qui a buzzé</h2>
-                <div className="buzzed-player-card">
-                  <span className="buzzed-player-name">{buzzedPlayer.name}</span>
-                  <button onClick={resetBuzzer} className="reset-button admin-reset">
-                    🔄 Reset Buzzer
-                  </button>
-                </div>
-              </div>
-            )}
-
-            {!buzzedPlayer && (
-              <div className="waiting-info">
-                <h2>⏳ En attente</h2>
-                <p>Aucun joueur n'a encore buzzé...</p>
-              </div>
-            )}
 
             <div className="players-section">
               <h2>Joueurs en ligne ({players.length})</h2>

@@ -11,6 +11,24 @@
   padding-bottom: 60px;
 }
 
+/* Section d'attente pour GamePage */
+.waiting-info {
+  background: linear-gradient(135deg, #3498db, #2980b9);
+  border-radius: 12px;
+  padding: 25px;
+  margin-bottom: 30px;
+  text-align: center;
+  box-shadow: 0 8px 25px rgba(52, 152, 219, 0.3);
+}
+
+.waiting-info h2 {
+  color: white;
+  font-family: 'Orbitron', monospace;
+  font-size: 1.8rem;
+  margin-bottom: 10px;
+  text-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
+}
+
 
 .auth-required {
   text-align: center;
