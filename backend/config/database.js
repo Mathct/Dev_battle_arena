@@ -174,6 +174,7 @@ async function createScoresTable() {
 
 
 
+
 module.exports = {
   pool,
   createDatabase,
