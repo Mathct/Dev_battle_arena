@@ -130,8 +130,8 @@ app.post('/api/game/state', async (req, res) => {
 const players = new Map();
 let buzzedPlayer = null;
 let buzzersEnabled = false; // État global des buzzers
-let serverCountdown = 0; // ✅ NOUVEAU : Chrono géré côté serveur
-let countdownInterval = null; // ✅ NOUVEAU : Interval du chrono serveur
+let serverCountdown = 0;
+let countdownInterval = null;
 
 // Fonction pour vérifier si un joueur est dans une équipe
 async function isPlayerInTeam(playerName) {
@@ -163,7 +163,7 @@ async function notifyAllPlayersTeamStatus() {
   }
 }
 
-// ✅ NOUVEAU : Fonction pour démarrer le chrono côté serveur
+// Fonction pour démarrer le chrono côté serveur
 function startServerCountdown(duration = 5.0) {
   // Arrêter le chrono existant s'il y en a un
   stopServerCountdown();
@@ -188,7 +188,7 @@ function startServerCountdown(duration = 5.0) {
   }, 10); // Mise à jour toutes les 10ms
 }
 
-// ✅ NOUVEAU : Fonction pour arrêter le chrono côté serveur
+// Fonction pour arrêter le chrono côté serveur
 function stopServerCountdown() {
   if (countdownInterval) {
     clearInterval(countdownInterval);
@@ -305,7 +305,7 @@ io.on('connection', (socket) => {
       
       console.log(`${player.name} a buzzé !`);
       
-      // ✅ NOUVEAU : Arrêter le chrono côté serveur
+      // Arrêter le chrono côté serveur
       buzzersEnabled = false;
       stopServerCountdown();
       console.log(`⏱️ Chrono serveur arrêté automatiquement après buzz de ${player.name}`);
@@ -346,7 +346,7 @@ io.on('connection', (socket) => {
     console.log(`🔔 État des buzzers changé: ${data.enabled ? 'activés' : 'désactivés'}`);
     buzzersEnabled = data.enabled; // Mettre à jour l'état global
     
-    // ✅ NOUVEAU : Gérer le chrono côté serveur
+    // Gérer le chrono côté serveur
     if (data.enabled) {
       startServerCountdown(5.0); // Démarrer le chrono de 5 secondes
     } else {

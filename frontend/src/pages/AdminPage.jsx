@@ -118,11 +118,10 @@ function AdminPage() {
       localStorage.setItem('buzzedPlayer', JSON.stringify(player));
       console.log("🔔 État du buzzer reçu (Admin):", player);
       
-      // ✅ Le serveur s'occupe maintenant de l'arrêt du chrono
-      // On met juste à jour l'état local pour la cohérence
+      // Mise à jour de l'état local pour la cohérence
       setCountdown(0);
       setBuzzersEnabled(false);
-      console.log("⏱️ État local mis à jour après buzz (chrono géré par le serveur)");
+      console.log("⏱️ État local mis à jour après buzz");
     });
 
     // Reset du buzzer
@@ -144,6 +143,12 @@ function AdminPage() {
       console.log("🔔 État des buzzers reçu (Admin):", data.enabled);
     });
 
+    // Écouter le chrono depuis le serveur
+    socket.on("countdownUpdate", (data) => {
+      console.log("⏱️ Chrono reçu depuis le serveur (Admin):", data.countdown);
+      setCountdown(data.countdown);
+    });
+
     // Nettoyage
     return () => {
       socket.off("connect");
@@ -153,6 +158,7 @@ function AdminPage() {
       socket.off("buzzerReset");
       socket.off("gameStateChanged");
       socket.off("buzzersStateChanged");
+      socket.off("countdownUpdate");
     };
   }, [navigate]);
 
@@ -188,8 +194,6 @@ function AdminPage() {
     }
   }, [isAuthenticated, user, isConnected, hasJoinedGame]);
 
-  // ✅ SUPPRIMÉ : Le chrono est maintenant géré côté serveur
-  // Plus besoin de gérer le chrono côté client
 
   // Éviter les reconnexions multiples
   useEffect(() => {
@@ -219,13 +223,12 @@ function AdminPage() {
       console.log("🔄 Reset du buzzer par l'admin");
       socket.emit("resetBuzzer");
       
-      // Désactiver les buzzers et arrêter le chrono après reset
+      // Désactiver les buzzers après reset (le serveur gère le chrono)
       setBuzzersEnabled(false);
       setCountdown(0);
       if (socket && socket.connected) {
         socket.emit('buzzersStateChanged', { enabled: false });
-        socket.emit('countdownUpdate', { countdown: 0 });
-        console.log("🔔 Buzzers désactivés et chrono arrêté après reset");
+        console.log("🔔 Buzzers désactivés après reset (chrono géré par le serveur)");
       }
     } else {
       console.log("❌ Pas connecté au serveur");
@@ -278,12 +281,11 @@ function AdminPage() {
         setBuzzedPlayer(null); // Annuler le buzz en cours
         setCountdown(0); // Arrêter le chrono
         
-        // Notifier tous les joueurs que les buzzers sont désactivés
+        // Notifier tous les joueurs que les buzzers sont désactivés (le serveur gère le chrono)
         if (socket && socket.connected) {
           socket.emit('buzzersStateChanged', { enabled: false });
-          socket.emit('countdownUpdate', { countdown: 0 });
           socket.emit('resetBuzzer'); // Reset du buzzer pour tous les joueurs
-          console.log("🔔 Buzzers désactivés, chrono arrêté et buzzer reset envoyés à tous les joueurs");
+          console.log("🔔 Buzzers désactivés et buzzer reset envoyés à tous les joueurs (chrono géré par le serveur)");
         }
         
         console.log("🛑 Partie arrêtée par l'admin - Buzzer annulé");
@@ -502,7 +504,7 @@ function AdminPage() {
   };
 
   const toggleBuzzers = () => {
-    // ✅ Vérifier qu'aucun joueur n'a déjà buzzé
+    // Vérifier qu'aucun joueur n'a déjà buzzé
     if (buzzedPlayer) {
       console.log("⚠️ Impossible d'activer les buzzers car quelqu'un a déjà buzzé");
       return;
@@ -511,15 +513,14 @@ function AdminPage() {
     const newState = !buzzersEnabled;
     setBuzzersEnabled(newState);
     
-    // ✅ Le serveur gère maintenant le chrono automatiquement
-    // On met juste à jour l'état local
+    // Mise à jour de l'état local
     if (newState) {
       setCountdown(5.00); // Valeur initiale pour l'affichage
     } else {
       setCountdown(0);
     }
     
-    // Envoyer l'état des buzzers au serveur (qui gérera le chrono)
+    // Envoyer l'état des buzzers au serveur
     if (socket && socket.connected) {
       socket.emit('buzzersStateChanged', { enabled: newState });
       console.log(`🔔 État des buzzers envoyé au serveur: ${newState ? 'activés' : 'désactivés'}`);
@@ -527,7 +528,7 @@ function AdminPage() {
       console.log('❌ Socket non connecté');
     }
     
-    console.log(`🔔 Buzzers ${newState ? 'activés' : 'désactivés'} (chrono géré par le serveur)`);
+    console.log(`🔔 Buzzers ${newState ? 'activés' : 'désactivés'}`);
   };
 
 
