@@ -130,6 +130,8 @@ app.post('/api/game/state', async (req, res) => {
 const players = new Map();
 let buzzedPlayer = null;
 let buzzersEnabled = false; // État global des buzzers
+let serverCountdown = 0; // ✅ NOUVEAU : Chrono géré côté serveur
+let countdownInterval = null; // ✅ NOUVEAU : Interval du chrono serveur
 
 // Fonction pour vérifier si un joueur est dans une équipe
 async function isPlayerInTeam(playerName) {
@@ -158,6 +160,47 @@ async function notifyAllPlayersTeamStatus() {
     }
   } catch (error) {
     console.error('Erreur lors de la notification du statut d\'équipe:', error);
+  }
+}
+
+// ✅ NOUVEAU : Fonction pour démarrer le chrono côté serveur
+function startServerCountdown(duration = 5.0) {
+  // Arrêter le chrono existant s'il y en a un
+  stopServerCountdown();
+  
+  serverCountdown = duration;
+  console.log(`⏱️ Chrono serveur démarré: ${duration} secondes`);
+  
+  // Envoyer le chrono initial à tous les clients
+  io.emit('countdownUpdate', { countdown: serverCountdown });
+  
+  countdownInterval = setInterval(() => {
+    serverCountdown -= 0.01;
+    
+    if (serverCountdown <= 0) {
+      serverCountdown = 0;
+      stopServerCountdown();
+      console.log('⏱️ Chrono serveur terminé');
+    }
+    
+    // Envoyer le chrono à tous les clients
+    io.emit('countdownUpdate', { countdown: serverCountdown });
+  }, 10); // Mise à jour toutes les 10ms
+}
+
+// ✅ NOUVEAU : Fonction pour arrêter le chrono côté serveur
+function stopServerCountdown() {
+  if (countdownInterval) {
+    clearInterval(countdownInterval);
+    countdownInterval = null;
+  }
+  
+  if (serverCountdown > 0) {
+    serverCountdown = 0;
+    console.log('⏱️ Chrono serveur arrêté');
+    
+    // Envoyer l'arrêt du chrono à tous les clients
+    io.emit('countdownUpdate', { countdown: 0 });
   }
 }
 
@@ -262,8 +305,15 @@ io.on('connection', (socket) => {
       
       console.log(`${player.name} a buzzé !`);
       
+      // ✅ NOUVEAU : Arrêter le chrono côté serveur
+      buzzersEnabled = false;
+      stopServerCountdown();
+      console.log(`⏱️ Chrono serveur arrêté automatiquement après buzz de ${player.name}`);
+      
       // Notifier tous les clients
       io.emit('playerBuzzed', player);
+      io.emit('buzzersStateChanged', { enabled: false });
+      
       const playersList = Array.from(players.values());
       io.emit('playersUpdate', playersList);
       console.log(`📡 Liste des joueurs envoyée après buzzer:`, playersList.map(p => ({ name: p.name, buzzed: p.buzzed })));
@@ -295,6 +345,14 @@ io.on('connection', (socket) => {
   socket.on('buzzersStateChanged', (data) => {
     console.log(`🔔 État des buzzers changé: ${data.enabled ? 'activés' : 'désactivés'}`);
     buzzersEnabled = data.enabled; // Mettre à jour l'état global
+    
+    // ✅ NOUVEAU : Gérer le chrono côté serveur
+    if (data.enabled) {
+      startServerCountdown(5.0); // Démarrer le chrono de 5 secondes
+    } else {
+      stopServerCountdown(); // Arrêter le chrono
+    }
+    
     console.log(`📡 Diffusion de l'état des buzzers à tous les clients...`);
     // Diffuser l'état des buzzers à tous les clients
     io.emit('buzzersStateChanged', { enabled: data.enabled });

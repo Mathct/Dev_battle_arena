@@ -118,16 +118,11 @@ function AdminPage() {
       localStorage.setItem('buzzedPlayer', JSON.stringify(player));
       console.log("🔔 État du buzzer reçu (Admin):", player);
       
-      // Arrêter le chrono quand un joueur buzz
+      // ✅ Le serveur s'occupe maintenant de l'arrêt du chrono
+      // On met juste à jour l'état local pour la cohérence
       setCountdown(0);
       setBuzzersEnabled(false);
-      
-      // Envoyer l'arrêt du chrono aux utilisateurs
-      if (socket && socket.connected) {
-        socket.emit('countdownUpdate', { countdown: 0 });
-        socket.emit('buzzersStateChanged', { enabled: false });
-        console.log("⏱️ Chrono arrêté automatiquement après buzz");
-      }
+      console.log("⏱️ État local mis à jour après buzz (chrono géré par le serveur)");
     });
 
     // Reset du buzzer
@@ -193,25 +188,8 @@ function AdminPage() {
     }
   }, [isAuthenticated, user, isConnected, hasJoinedGame]);
 
-  // Gestion du compte à rebours
-  useEffect(() => {
-    let interval;
-    if (countdown > 0) {
-      interval = setInterval(() => {
-        setCountdown(prev => {
-          const newCountdown = prev <= 0.01 ? 0 : prev - 0.01;
-          
-          // Envoyer le chrono aux utilisateurs à chaque mise à jour
-          if (socket && socket.connected) {
-            socket.emit('countdownUpdate', { countdown: newCountdown });
-          }
-          
-          return newCountdown;
-        });
-      }, 10); // Mise à jour toutes les 10ms pour les centièmes
-    }
-    return () => clearInterval(interval);
-  }, [countdown]);
+  // ✅ SUPPRIMÉ : Le chrono est maintenant géré côté serveur
+  // Plus besoin de gérer le chrono côté client
 
   // Éviter les reconnexions multiples
   useEffect(() => {
@@ -524,31 +502,32 @@ function AdminPage() {
   };
 
   const toggleBuzzers = () => {
+    // ✅ Vérifier qu'aucun joueur n'a déjà buzzé
+    if (buzzedPlayer) {
+      console.log("⚠️ Impossible d'activer les buzzers car quelqu'un a déjà buzzé");
+      return;
+    }
+    
     const newState = !buzzersEnabled;
     setBuzzersEnabled(newState);
     
-    // Démarrer le compte à rebours de 5 secondes quand on active les buzzers
+    // ✅ Le serveur gère maintenant le chrono automatiquement
+    // On met juste à jour l'état local
     if (newState) {
-      setCountdown(5.00);
+      setCountdown(5.00); // Valeur initiale pour l'affichage
     } else {
       setCountdown(0);
     }
     
-    // Envoyer l'état des buzzers à tous les clients
+    // Envoyer l'état des buzzers au serveur (qui gérera le chrono)
     if (socket && socket.connected) {
       socket.emit('buzzersStateChanged', { enabled: newState });
-      // Envoyer le chrono aux utilisateurs
-      if (newState) {
-        socket.emit('countdownUpdate', { countdown: 5.00 });
-      } else {
-        socket.emit('countdownUpdate', { countdown: 0 });
-      }
-      console.log(`🔔 État des buzzers envoyé: ${newState ? 'activés' : 'désactivés'}`);
+      console.log(`🔔 État des buzzers envoyé au serveur: ${newState ? 'activés' : 'désactivés'}`);
     } else {
       console.log('❌ Socket non connecté');
     }
     
-    console.log(`🔔 Buzzers ${newState ? 'activés' : 'désactivés'}`);
+    console.log(`🔔 Buzzers ${newState ? 'activés' : 'désactivés'} (chrono géré par le serveur)`);
   };
 
 
