@@ -23,6 +23,7 @@ function GamePage() {
   const [gameState, setGameState] = useState(0);
   const [buzzersEnabled, setBuzzersEnabled] = useState(false);
   const [countdown, setCountdown] = useState(0);
+  const [isInTeam, setIsInTeam] = useState(false);
   
   // Hook de déconnexion automatique (30 minutes d'inactivité, avertissement à 25 minutes)
   const { showWarning, warningCountdown, handleStayConnected, handleLogoutNow } = useAutoLogout(30, 5);
@@ -107,6 +108,26 @@ function GamePage() {
       setCountdown(data.countdown);
     });
 
+    // Écouter le statut d'équipe
+    socket.on("teamStatus", (data) => {
+      setIsInTeam(data.isInTeam);
+    });
+
+    // Écouter les erreurs de buzzer
+    socket.on("buzzerError", (data) => {
+      alert(data.message);
+    });
+
+    // Écouter la demande de mise à jour du statut d'équipe
+    socket.on("updateTeamStatus", () => {
+      socket.emit("checkTeamStatus");
+    });
+
+    // Écouter la réponse du statut d'équipe
+    socket.on("teamStatusResponse", (data) => {
+      setIsInTeam(data.isInTeam);
+    });
+
 
     // Nettoyage
     return () => {
@@ -117,6 +138,10 @@ function GamePage() {
       socket.off("gameStateChanged");
       socket.off("buzzersStateChanged");
       socket.off("countdownUpdate");
+      socket.off("teamStatus");
+      socket.off("buzzerError");
+      socket.off("updateTeamStatus");
+      socket.off("teamStatusResponse");
     };
   }, [navigate]);
 
@@ -257,14 +282,24 @@ function GamePage() {
             </div>
           ) : (
             <>
-              <h2 className="buzzer-title">Votre Buzzer</h2>
-              <button 
-                onClick={buzz}
-                disabled={!isConnected || buzzedPlayer || !buzzersEnabled}
-                className={`buzzer-button ${buzzedPlayer || !buzzersEnabled ? 'disabled' : ''}`}
-              >
-                {!buzzersEnabled ? 'BUZZER DÉSACTIVÉ' : 'BUZZER'}
-              </button>
+              {!isInTeam ? (
+                <div className="no-team-info">
+                  <h2>❌ Pas d'équipe assignée</h2>
+                  <p>Vous devez être assigné à une équipe pour pouvoir participer au jeu.</p>
+                  <p>Contactez l'administrateur pour être ajouté à une équipe.</p>
+                </div>
+              ) : (
+                <>
+                  <h2 className="buzzer-title">Votre Buzzer</h2>
+                  <button 
+                    onClick={buzz}
+                    disabled={!isConnected || buzzedPlayer || !buzzersEnabled}
+                    className={`buzzer-button ${buzzedPlayer || !buzzersEnabled ? 'disabled' : ''}`}
+                  >
+                    {!buzzersEnabled ? 'BUZZER DÉSACTIVÉ' : 'BUZZER'}
+                  </button>
+                </>
+              )}
             </>
           )}
         </>

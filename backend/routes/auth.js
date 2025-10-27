@@ -5,6 +5,41 @@ const { pool } = require('../config/database');
 
 const router = express.Router();
 
+// Variable pour stocker l'instance Socket.IO
+let ioInstance = null;
+
+// Fonction pour définir l'instance Socket.IO
+const setSocketIO = (io) => {
+  ioInstance = io;
+};
+
+// Fonction pour vérifier si un joueur est dans une équipe
+async function isPlayerInTeam(playerName) {
+  try {
+    const result = await pool.query(
+      'SELECT team_name FROM teams WHERE user_id = (SELECT id FROM users WHERE username = ?)',
+      [playerName]
+    );
+    return result[0].length > 0;
+  } catch (error) {
+    console.error('Erreur lors de la vérification de l\'équipe:', error);
+    return false;
+  }
+}
+
+// Fonction pour notifier tous les joueurs d'une mise à jour de leur statut d'équipe
+async function notifyAllPlayersTeamStatus() {
+  if (!ioInstance) {
+    return;
+  }
+
+  try {
+    ioInstance.emit('updateTeamStatus');
+  } catch (error) {
+    console.error('Erreur lors de la notification du statut d\'équipe:', error);
+  }
+}
+
 // Configuration JWT
 const JWT_SECRET = process.env.JWT_SECRET || 'your_super_secret_jwt_key_here_change_this_in_production';
 const JWT_EXPIRES_IN = process.env.JWT_EXPIRES_IN || '24h';
@@ -322,6 +357,9 @@ router.post('/assign-teams', async (req, res) => {
       // Valider la transaction
       await connection.commit();
 
+      // Notifier tous les joueurs de la mise à jour de leur statut d'équipe
+      await notifyAllPlayersTeamStatus();
+
       res.json({
         success: true,
         message: 'Équipes assignées avec succès',
@@ -554,3 +592,4 @@ router.put('/scores/:teamName', async (req, res) => {
 });
 
 module.exports = router;
+module.exports.setSocketIO = setSocketIO;

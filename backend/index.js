@@ -29,6 +29,9 @@ const io = new Server(server, {
   }
 });
 
+// Exporter l'instance Socket.IO pour les routes
+module.exports.io = io;
+
 // Middleware
 app.use(cors());
 app.use(express.json());
@@ -37,6 +40,9 @@ app.use(express.urlencoded({ extended: true }));
 // Routes d'authentification
 const authRoutes = require('./routes/auth');
 app.use('/api/auth', authRoutes);
+
+// Configurer Socket.IO pour les routes d'authentification
+authRoutes.setSocketIO(io);
 
 // Route de base
 app.get('/', (req, res) => {
@@ -125,13 +131,43 @@ const players = new Map();
 let buzzedPlayer = null;
 let buzzersEnabled = false; // État global des buzzers
 
+// Fonction pour vérifier si un joueur est dans une équipe
+async function isPlayerInTeam(playerName) {
+  try {
+    const result = await pool.query(
+      'SELECT team_name FROM teams WHERE user_id = (SELECT id FROM users WHERE username = ?)',
+      [playerName]
+    );
+    return result[0].length > 0;
+  } catch (error) {
+    console.error('Erreur lors de la vérification de l\'équipe:', error);
+    return false;
+  }
+}
+
+// Fonction pour notifier tous les joueurs d'une mise à jour de leur statut d'équipe
+async function notifyAllPlayersTeamStatus() {
+  try {
+    const playersList = Array.from(players.values());
+    for (const player of playersList) {
+      const isInTeam = await isPlayerInTeam(player.name);
+      const playerSocket = io.sockets.sockets.get(player.id);
+      if (playerSocket) {
+        playerSocket.emit('teamStatus', { isInTeam });
+      }
+    }
+  } catch (error) {
+    console.error('Erreur lors de la notification du statut d\'équipe:', error);
+  }
+}
+
 // Gestion des connexions Socket.IO
 io.on('connection', (socket) => {
   console.log(`Utilisateur connecté: ${socket.id}`);
   console.log(`Total utilisateurs connectés: ${io.engine.clientsCount}`);
   
   // Rejoindre le jeu
-  socket.on('joinGame', (playerName, isAdmin = false) => {
+  socket.on('joinGame', async (playerName, isAdmin = false) => {
     if (isAdmin) {
       // Les admins ne sont pas ajoutés à la liste des joueurs
       console.log(`👑 ${playerName} (Admin) connecté au serveur`);
@@ -180,21 +216,22 @@ io.on('connection', (socket) => {
       // Émettre l'événement de connexion
       io.emit('playerConnected', playerName);
       
+      // Vérifier si le joueur est dans une équipe et envoyer l'information
+      const isInTeam = await isPlayerInTeam(playerName);
+      socket.emit('teamStatus', { isInTeam });
+      
       // Notifier tous les clients de la mise à jour des joueurs
       const playersList = Array.from(players.values());
       io.emit('playersUpdate', playersList);
-      console.log(`📡 Liste des joueurs envoyée:`, playersList.map(p => ({ name: p.name, buzzed: p.buzzed })));
       
       // Si quelqu'un a buzzé, envoyer l'état à tous les joueurs
       if (buzzedPlayer) {
         io.emit('playerBuzzed', buzzedPlayer);
-        console.log(`📡 État du buzzer envoyé à tous les joueurs: ${buzzedPlayer.name} a buzzé`);
         
         // Si c'est le joueur qui a buzzé qui se reconnecte, forcer l'envoi de l'état
         if (buzzedPlayer.name === playerName) {
           setTimeout(() => {
             io.emit('playerBuzzed', buzzedPlayer);
-            console.log(`📡 État du buzzer renvoyé après reconnexion de ${playerName}`);
           }, 100);
         }
       }
@@ -202,7 +239,7 @@ io.on('connection', (socket) => {
   });
 
   // Buzzer
-  socket.on('buzz', () => {
+  socket.on('buzz', async () => {
     if (buzzedPlayer) {
       console.log(`Tentative de buzzer mais ${buzzedPlayer.name} a déjà buzzé`);
       return;
@@ -211,6 +248,14 @@ io.on('connection', (socket) => {
     // Trouver le joueur par socket.id
     const player = Array.from(players.values()).find(p => p.id === socket.id);
     if (player && !player.buzzed) {
+      // Vérifier si le joueur est dans une équipe
+      const isInTeam = await isPlayerInTeam(player.name);
+      if (!isInTeam) {
+        console.log(`❌ ${player.name} ne peut pas buzzer car il n'est pas dans une équipe`);
+        socket.emit('buzzerError', { message: 'Vous devez être dans une équipe pour pouvoir buzzer' });
+        return;
+      }
+
       buzzedPlayer = player;
       player.buzzed = true;
       players.set(player.name, player);
@@ -254,6 +299,15 @@ io.on('connection', (socket) => {
     // Diffuser l'état des buzzers à tous les clients
     io.emit('buzzersStateChanged', { enabled: data.enabled });
     console.log(`✅ État des buzzers diffusé avec succès`);
+  });
+
+  // Vérification du statut d'équipe pour un joueur spécifique
+  socket.on('checkTeamStatus', async () => {
+    const player = Array.from(players.values()).find(p => p.id === socket.id);
+    if (player) {
+      const isInTeam = await isPlayerInTeam(player.name);
+      socket.emit('teamStatusResponse', { isInTeam });
+    }
   });
 
   // Gestion du chrono
@@ -359,4 +413,6 @@ async function startServer() {
 
 startServer();
 
+// Exporter la fonction de notification pour les routes
+module.exports.notifyAllPlayersTeamStatus = notifyAllPlayersTeamStatus;
 module.exports = app;
