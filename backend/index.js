@@ -11,7 +11,8 @@ const {
   createUsersTable,
   createTeamsTable,
   createGameTable,
-  createScoresTable
+  createScoresTable,
+  createPlayerbuzzTable
 } = require('./config/database');
 
 // Charger les variables d'environnement
@@ -305,6 +306,23 @@ io.on('connection', (socket) => {
       
       console.log(`${player.name} a buzzé !`);
       
+      // Insérer l'id du joueur dans la table playerbuzz
+      try {
+        const connection = await pool.getConnection();
+        // Récupérer l'id de l'utilisateur depuis la table users
+        const [userRows] = await connection.execute('SELECT id FROM users WHERE username = ?', [player.name]);
+        if (userRows.length > 0) {
+          const userId = userRows[0].id;
+          await connection.execute('INSERT INTO playerbuzz (user_id) VALUES (?)', [userId]);
+          console.log(`📝 Id du joueur ${player.name} (user_id: ${userId}) inséré dans playerbuzz`);
+        } else {
+          console.log(`⚠️ Utilisateur ${player.name} non trouvé dans la table users`);
+        }
+        connection.release();
+      } catch (error) {
+        console.error('❌ Erreur lors de l\'insertion dans playerbuzz:', error.message);
+      }
+      
       // Arrêter le chrono côté serveur
       buzzersEnabled = false;
       stopServerCountdown();
@@ -453,6 +471,12 @@ async function startServer() {
     const scoresTableCreated = await createScoresTable();
     if (!scoresTableCreated) {
       console.error('❌ Impossible de créer la table scores');
+      process.exit(1);
+    }
+
+    const playerbuzzTableCreated = await createPlayerbuzzTable();
+    if (!playerbuzzTableCreated) {
+      console.error('❌ Impossible de créer la table playerbuzz');
       process.exit(1);
     }
 

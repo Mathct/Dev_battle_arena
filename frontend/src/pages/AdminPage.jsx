@@ -27,6 +27,7 @@ function AdminPage() {
   const [scores, setScores] = useState({ team1: 0, team2: 0 });
   const [buzzersEnabled, setBuzzersEnabled] = useState(false);
   const [countdown, setCountdown] = useState(0);
+  const [buzzedUsers, setBuzzedUsers] = useState([]);
   
   // Hook de déconnexion automatique (30 minutes d'inactivité, avertissement à 25 minutes)
   const { showWarning, warningCountdown, handleStayConnected, handleLogoutNow } = useAutoLogout(30, 5);
@@ -122,6 +123,21 @@ function AdminPage() {
       setCountdown(0);
       setBuzzersEnabled(false);
       console.log("⏱️ État local mis à jour après buzz");
+      
+      // Recharger la liste des utilisateurs qui ont buzzé
+      const loadBuzzedUsers = async () => {
+        try {
+          const response = await fetch('http://localhost:3000/api/auth/buzzed-users');
+          if (response.ok) {
+            const data = await response.json();
+            setBuzzedUsers(data.buzzedUsers);
+            console.log("🔴 Liste des utilisateurs qui ont buzzé mise à jour:", data.buzzedUsers);
+          }
+        } catch (error) {
+          console.error('Erreur lors du chargement des utilisateurs qui ont buzzé:', error);
+        }
+      };
+      loadBuzzedUsers();
     });
 
     // Reset du buzzer
@@ -178,7 +194,21 @@ function AdminPage() {
       }
     };
     
+    const loadBuzzedUsers = async () => {
+      try {
+        const response = await fetch('http://localhost:3000/api/auth/buzzed-users');
+        if (response.ok) {
+          const data = await response.json();
+          setBuzzedUsers(data.buzzedUsers);
+          console.log("🔴 Utilisateurs qui ont buzzé:", data.buzzedUsers);
+        }
+      } catch (error) {
+        console.error('Erreur lors du chargement des utilisateurs qui ont buzzé:', error);
+      }
+    };
+    
     loadGameState();
+    loadBuzzedUsers();
   }, []);
 
   // Rejoindre automatiquement en mode admin quand l'utilisateur est défini et connecté
@@ -427,6 +457,47 @@ function AdminPage() {
     }
   };
 
+  const clearBuzzes = async () => {
+    console.log('🔓 Tentative de déblocage des buzzers...');
+    const confirmed = window.confirm('Êtes-vous sûr de vouloir débloquer tous les buzzers ?');
+    if (!confirmed) {
+      console.log('❌ Déblocage annulé par l\'utilisateur');
+      return;
+    }
+
+    const token = localStorage.getItem('token');
+    if (!token) {
+      console.log('❌ Token manquant');
+      return;
+    }
+
+    try {
+      console.log('📡 Envoi de la requête DELETE vers /api/auth/clear-buzzes');
+      const response = await fetch('http://localhost:3000/api/auth/clear-buzzes', {
+        method: 'DELETE',
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json'
+        }
+      });
+
+      console.log('📡 Réponse reçue:', response.status, response.statusText);
+      const data = await response.json();
+      console.log('📡 Données de réponse:', data);
+
+      if (data.success) {
+        setBuzzedUsers([]);
+        console.log('✅ Tous les buzzers ont été débloqués');
+      } else {
+        console.error('❌ Erreur lors du déblocage des buzzers:', data.message);
+        alert('Erreur lors du déblocage des buzzers');
+      }
+    } catch (error) {
+      console.error('❌ Erreur lors de la requête de déblocage des buzzers:', error);
+      alert('Erreur lors du déblocage des buzzers');
+    }
+  };
+
   const validateResponse = async () => {
     if (!buzzedPlayer) return;
 
@@ -627,6 +698,12 @@ function AdminPage() {
                   >
                     Réinitialiser les Scores
                   </button>
+                  <button 
+                    onClick={clearBuzzes} 
+                    className="clear-buzzes-btn"
+                  >
+                    Débloquer les Buzzers
+                  </button>
                 </div>
               </div>
               
@@ -658,19 +735,22 @@ function AdminPage() {
                       {teams.team1.length === 0 ? (
                         <p className="empty-team">Aucun joueur</p>
                       ) : (
-                        teams.team1.map((player) => (
-                          <div key={player.id} className={`team-player ${buzzedPlayer && buzzedPlayer.name === player.username ? 'buzzed' : ''}`}>
-                            <span className={`player-name ${connectedPlayers.has(player.username) ? 'online' : 'offline'}`}>
-                              {player.username}
-                            </span>
-                            {connectedPlayers.has(player.username) && (
-                              <span className="online-indicator">🟢</span>
-                            )}
-                            {buzzedPlayer && buzzedPlayer.name === player.username && (
-                              <span className="buzzed-indicator">🔔</span>
-                            )}
-                          </div>
-                        ))
+                        teams.team1.map((player) => {
+                          const hasBuzzed = buzzedUsers.some(buzzedUser => buzzedUser.username === player.username);
+                          return (
+                            <div key={player.id} className={`team-player ${hasBuzzed ? 'buzzed' : ''}`}>
+                              <span className={`player-name ${connectedPlayers.has(player.username) ? 'online' : 'offline'}`}>
+                                {player.username}
+                              </span>
+                              {connectedPlayers.has(player.username) && (
+                                <span className="online-indicator">🟢</span>
+                              )}
+                              {buzzedPlayer && buzzedPlayer.name === player.username && (
+                                <span className="buzzed-indicator">🔔</span>
+                              )}
+                            </div>
+                          );
+                        })
                       )}
                     </div>
                   </div>
@@ -700,19 +780,22 @@ function AdminPage() {
                       {teams.team2.length === 0 ? (
                         <p className="empty-team">Aucun joueur</p>
                       ) : (
-                        teams.team2.map((player) => (
-                          <div key={player.id} className={`team-player ${buzzedPlayer && buzzedPlayer.name === player.username ? 'buzzed' : ''}`}>
-                            <span className={`player-name ${connectedPlayers.has(player.username) ? 'online' : 'offline'}`}>
-                              {player.username}
-                            </span>
-                            {connectedPlayers.has(player.username) && (
-                              <span className="online-indicator">🟢</span>
-                            )}
-                            {buzzedPlayer && buzzedPlayer.name === player.username && (
-                              <span className="buzzed-indicator">🔔</span>
-                            )}
-                          </div>
-                        ))
+                        teams.team2.map((player) => {
+                          const hasBuzzed = buzzedUsers.some(buzzedUser => buzzedUser.username === player.username);
+                          return (
+                            <div key={player.id} className={`team-player ${hasBuzzed ? 'buzzed' : ''}`}>
+                              <span className={`player-name ${connectedPlayers.has(player.username) ? 'online' : 'offline'}`}>
+                                {player.username}
+                              </span>
+                              {connectedPlayers.has(player.username) && (
+                                <span className="online-indicator">🟢</span>
+                              )}
+                              {buzzedPlayer && buzzedPlayer.name === player.username && (
+                                <span className="buzzed-indicator">🔔</span>
+                              )}
+                            </div>
+                          );
+                        })
                       )}
                     </div>
                   </div>

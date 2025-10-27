@@ -591,5 +591,32 @@ router.put('/scores/:teamName', async (req, res) => {
   }
 });
 
+// Route pour récupérer les utilisateurs qui ont buzzé
+router.get('/buzzed-users', async (req, res) => {
+  try {
+    const [rows] = await pool.execute(`
+      SELECT DISTINCT u.id, u.username 
+      FROM users u 
+      INNER JOIN playerbuzz pb ON u.id = pb.user_id
+    `);
+    
+    res.json({ success: true, buzzedUsers: rows });
+  } catch (error) {
+    console.error('Erreur lors de la récupération des utilisateurs qui ont buzzé:', error);
+    res.status(500).json({ success: false, message: 'Erreur serveur' });
+  }
+});
+
+// Route pour vider la table playerbuzz
+router.delete('/clear-buzzes', async (req, res) => {
+  try {
+    await pool.execute('DELETE FROM playerbuzz');
+    res.json({ success: true, message: 'Table playerbuzz vidée avec succès' });
+  } catch (error) {
+    console.error('Erreur lors du vidage de la table playerbuzz:', error);
+    res.status(500).json({ success: false, message: 'Erreur serveur' });
+  }
+});
+
 module.exports = router;
 module.exports.setSocketIO = setSocketIO;

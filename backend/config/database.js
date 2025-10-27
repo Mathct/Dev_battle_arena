@@ -172,6 +172,29 @@ async function createScoresTable() {
   }
 }
 
+// Fonction pour créer la table playerbuzz si elle n'existe pas
+async function createPlayerbuzzTable() {
+  try {
+    const connection = await pool.getConnection();
+    
+    const createTableQuery = `
+      CREATE TABLE IF NOT EXISTS playerbuzz (
+        id INT AUTO_INCREMENT PRIMARY KEY,
+        user_id INT NOT NULL,
+        FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
+      ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci
+    `;
+    
+    await connection.execute(createTableQuery);
+    console.log('✅ Table playerbuzz créée ou vérifiée avec succès');
+    connection.release();
+    return true;
+  } catch (error) {
+    console.error('❌ Erreur lors de la création de la table playerbuzz:', error.message);
+    return false;
+  }
+}
+
 
 
 
@@ -182,5 +205,6 @@ module.exports = {
   createUsersTable,
   createTeamsTable,
   createGameTable,
-  createScoresTable
+  createScoresTable,
+  createPlayerbuzzTable
 };
