@@ -24,6 +24,8 @@ function GamePage() {
   const [buzzersEnabled, setBuzzersEnabled] = useState(false);
   const [countdown, setCountdown] = useState(0);
   const [isInTeam, setIsInTeam] = useState(false);
+  const [isLocked, setIsLocked] = useState(false);
+  const [teamStatusChecked, setTeamStatusChecked] = useState(false);
   
   // Hook de déconnexion automatique (30 minutes d'inactivité, avertissement à 25 minutes)
   const { showWarning, warningCountdown, handleStayConnected, handleLogoutNow } = useAutoLogout(30, 5);
@@ -111,6 +113,7 @@ function GamePage() {
     // Écouter le statut d'équipe
     socket.on("teamStatus", (data) => {
       setIsInTeam(data.isInTeam);
+      setTeamStatusChecked(true);
     });
 
     // Écouter les erreurs de buzzer
@@ -126,6 +129,7 @@ function GamePage() {
     // Écouter la réponse du statut d'équipe
     socket.on("teamStatusResponse", (data) => {
       setIsInTeam(data.isInTeam);
+      setTeamStatusChecked(true);
     });
 
 
@@ -163,6 +167,31 @@ function GamePage() {
     
     loadGameState();
   }, []);
+
+  // Vérifier si le joueur est bloqué
+  useEffect(() => {
+    const checkLockStatus = async () => {
+      if (!user || !user.username) return;
+      
+      try {
+        const response = await fetch(`http://localhost:3000/api/auth/is-locked/${encodeURIComponent(user.username)}`);
+        if (response.ok) {
+          const data = await response.json();
+          setIsLocked(data.isLocked || false);
+          console.log(`🔒 Statut de blocage pour ${user.username}:`, data.isLocked ? 'bloqué' : 'débloqué');
+        }
+      } catch (error) {
+        console.error('Erreur lors de la vérification du statut de blocage:', error);
+      }
+    };
+    
+    if (isAuthenticated && user) {
+      checkLockStatus();
+      // Vérifier périodiquement le statut de blocage
+      const interval = setInterval(checkLockStatus, 2000); // Vérifier toutes les 2 secondes
+      return () => clearInterval(interval);
+    }
+  }, [isAuthenticated, user]);
 
   // Gestion du compte à rebours
   useEffect(() => {
@@ -282,21 +311,24 @@ function GamePage() {
             </div>
           ) : (
             <>
-              {!isInTeam ? (
+              {!teamStatusChecked ? (
+                <div className="waiting-info">
+                  <h2>⏳ Chargement...</h2>
+                </div>
+              ) : !isInTeam ? (
                 <div className="no-team-info">
                   <h2>❌ Pas d'équipe assignée</h2>
                   <p>Vous devez être assigné à une équipe pour pouvoir participer au jeu.</p>
-                  <p>Contactez l'administrateur pour être ajouté à une équipe.</p>
                 </div>
               ) : (
                 <>
                   <h2 className="buzzer-title">Votre Buzzer</h2>
                   <button 
                     onClick={buzz}
-                    disabled={!isConnected || buzzedPlayer || !buzzersEnabled}
-                    className={`buzzer-button ${buzzedPlayer || !buzzersEnabled ? 'disabled' : ''}`}
+                    disabled={!isConnected || buzzedPlayer || !buzzersEnabled || isLocked}
+                    className={`buzzer-button ${buzzedPlayer || !buzzersEnabled || isLocked ? 'disabled' : ''}`}
                   >
-                    {!buzzersEnabled ? 'BUZZER DÉSACTIVÉ' : 'BUZZER'}
+                    {isLocked ? 'BUZZER BLOQUÉ' : !buzzersEnabled ? 'BUZZER DÉSACTIVÉ' : 'BUZZER'}
                   </button>
                 </>
               )}

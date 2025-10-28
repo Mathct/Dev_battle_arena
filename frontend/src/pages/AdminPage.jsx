@@ -498,6 +498,56 @@ function AdminPage() {
     }
   };
 
+  const togglePlayerLock = async (username) => {
+    const token = localStorage.getItem('token');
+    if (!token) {
+      console.log('❌ Token manquant');
+      return;
+    }
+
+    // Vérifier si le joueur est actuellement bloqué
+    const isLocked = buzzedUsers.some(user => user.username === username);
+    const endpoint = isLocked ? 'unlock-player' : 'lock-player';
+    const method = isLocked ? 'DELETE' : 'POST';
+    const action = isLocked ? 'déblocage' : 'blocage';
+
+    try {
+      console.log(`🔓 Tentative de ${action} du joueur ${username}...`);
+      const response = await fetch(`http://localhost:3000/api/auth/${endpoint}/${encodeURIComponent(username)}`, {
+        method: method,
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json'
+        }
+      });
+
+      const data = await response.json();
+
+      if (data.success) {
+        // Recharger la liste des joueurs qui ont buzzé pour mettre à jour l'état
+        const loadBuzzedUsers = async () => {
+          try {
+            const response = await fetch('http://localhost:3000/api/auth/buzzed-users');
+            if (response.ok) {
+              const data = await response.json();
+              setBuzzedUsers(data.buzzedUsers);
+            }
+          } catch (error) {
+            console.error('Erreur lors du rechargement des utilisateurs qui ont buzzé:', error);
+          }
+        };
+        await loadBuzzedUsers();
+        console.log(`✅ Joueur ${username} ${isLocked ? 'débloqué' : 'bloqué'} avec succès`);
+      } else {
+        console.error(`❌ Erreur lors du ${action} du joueur:`, data.message);
+        alert(`Erreur lors du ${action} du joueur`);
+      }
+    } catch (error) {
+      console.error(`❌ Erreur lors de la requête de ${action} du joueur:`, error);
+      alert(`Erreur lors du ${action} du joueur`);
+    }
+  };
+
   const validateResponse = async () => {
     if (!buzzedPlayer) return;
 
@@ -742,12 +792,21 @@ function AdminPage() {
                               <span className={`player-name ${connectedPlayers.has(player.username) ? 'online' : 'offline'}`}>
                                 {player.username}
                               </span>
-                              {connectedPlayers.has(player.username) && (
-                                <span className="online-indicator">🟢</span>
-                              )}
-                              {buzzedPlayer && buzzedPlayer.name === player.username && (
-                                <span className="buzzed-indicator">🔔</span>
-                              )}
+                              <div className="player-icons">
+                                {connectedPlayers.has(player.username) && (
+                                  <span className="online-indicator">🟢</span>
+                                )}
+                                {buzzedPlayer && buzzedPlayer.name === player.username && (
+                                  <span className="buzzed-indicator">🔔</span>
+                                )}
+                                <button 
+                                  className={`lock-btn ${hasBuzzed ? 'locked' : 'unlocked'}`}
+                                  onClick={() => togglePlayerLock(player.username)}
+                                  title={hasBuzzed ? 'Débloquer ce joueur' : 'Bloquer ce joueur'}
+                                >
+                                  {hasBuzzed ? '🔓' : '🔒'}
+                                </button>
+                              </div>
                             </div>
                           );
                         })
@@ -787,12 +846,21 @@ function AdminPage() {
                               <span className={`player-name ${connectedPlayers.has(player.username) ? 'online' : 'offline'}`}>
                                 {player.username}
                               </span>
-                              {connectedPlayers.has(player.username) && (
-                                <span className="online-indicator">🟢</span>
-                              )}
-                              {buzzedPlayer && buzzedPlayer.name === player.username && (
-                                <span className="buzzed-indicator">🔔</span>
-                              )}
+                              <div className="player-icons">
+                                {connectedPlayers.has(player.username) && (
+                                  <span className="online-indicator">🟢</span>
+                                )}
+                                {buzzedPlayer && buzzedPlayer.name === player.username && (
+                                  <span className="buzzed-indicator">🔔</span>
+                                )}
+                                <button 
+                                  className={`lock-btn ${hasBuzzed ? 'locked' : 'unlocked'}`}
+                                  onClick={() => togglePlayerLock(player.username)}
+                                  title={hasBuzzed ? 'Débloquer ce joueur' : 'Bloquer ce joueur'}
+                                >
+                                  {hasBuzzed ? '🔓' : '🔒'}
+                                </button>
+                              </div>
                             </div>
                           );
                         })

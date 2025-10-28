@@ -248,10 +248,59 @@
   opacity: 0.7;
 }
 
+.player-icons {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
 .online-indicator {
-  margin-right: 8px;
   font-size: 0.8rem;
   animation: onlinePulse 2s infinite;
+}
+
+.lock-btn {
+  font-size: 1rem;
+  padding: 4px 8px;
+  border-radius: 6px;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 32px;
+  height: 28px;
+  border: 1px solid;
+}
+
+.lock-btn.locked {
+  background: rgba(231, 76, 60, 0.2);
+  border-color: rgba(231, 76, 60, 0.5);
+  color: #e74c3c;
+}
+
+.lock-btn.locked:hover {
+  background: rgba(231, 76, 60, 0.4);
+  border-color: #e74c3c;
+  transform: scale(1.1);
+  box-shadow: 0 0 10px rgba(231, 76, 60, 0.5);
+}
+
+.lock-btn.unlocked {
+  background: rgba(46, 204, 113, 0.2);
+  border-color: rgba(46, 204, 113, 0.5);
+  color: #2ecc71;
+}
+
+.lock-btn.unlocked:hover {
+  background: rgba(46, 204, 113, 0.4);
+  border-color: #2ecc71;
+  transform: scale(1.1);
+  box-shadow: 0 0 10px rgba(46, 204, 113, 0.5);
+}
+
+.lock-btn:active {
+  transform: scale(0.95);
 }
 
 @keyframes onlinePulse {

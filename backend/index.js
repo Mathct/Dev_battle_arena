@@ -148,6 +148,22 @@ async function isPlayerInTeam(playerName) {
   }
 }
 
+// Fonction pour vérifier si un joueur est bloqué (dans la table playerbuzz)
+async function isPlayerLocked(playerName) {
+  try {
+    const connection = await pool.getConnection();
+    const [rows] = await connection.execute(
+      'SELECT pb.id FROM playerbuzz pb INNER JOIN users u ON pb.user_id = u.id WHERE u.username = ?',
+      [playerName]
+    );
+    connection.release();
+    return rows.length > 0;
+  } catch (error) {
+    console.error('Erreur lors de la vérification du blocage du joueur:', error);
+    return false;
+  }
+}
+
 // Fonction pour notifier tous les joueurs d'une mise à jour de leur statut d'équipe
 async function notifyAllPlayersTeamStatus() {
   try {
@@ -297,6 +313,14 @@ io.on('connection', (socket) => {
       if (!isInTeam) {
         console.log(`❌ ${player.name} ne peut pas buzzer car il n'est pas dans une équipe`);
         socket.emit('buzzerError', { message: 'Vous devez être dans une équipe pour pouvoir buzzer' });
+        return;
+      }
+
+      // Vérifier si le joueur est bloqué
+      const isLocked = await isPlayerLocked(player.name);
+      if (isLocked) {
+        console.log(`🔒 ${player.name} ne peut pas buzzer car il est bloqué`);
+        // Retourner silencieusement sans alerte
         return;
       }
 

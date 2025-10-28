@@ -607,6 +607,26 @@ router.get('/buzzed-users', async (req, res) => {
   }
 });
 
+// Route pour vérifier si un joueur est bloqué
+router.get('/is-locked/:username', async (req, res) => {
+  try {
+    const { username } = req.params;
+    
+    const [rows] = await pool.execute(
+      'SELECT pb.id FROM playerbuzz pb INNER JOIN users u ON pb.user_id = u.id WHERE u.username = ?',
+      [username]
+    );
+    
+    res.json({ 
+      success: true, 
+      isLocked: rows.length > 0 
+    });
+  } catch (error) {
+    console.error('Erreur lors de la vérification du statut de blocage:', error);
+    res.status(500).json({ success: false, message: 'Erreur serveur' });
+  }
+});
+
 // Route pour vider la table playerbuzz
 router.delete('/clear-buzzes', async (req, res) => {
   try {
@@ -615,6 +635,184 @@ router.delete('/clear-buzzes', async (req, res) => {
   } catch (error) {
     console.error('Erreur lors du vidage de la table playerbuzz:', error);
     res.status(500).json({ success: false, message: 'Erreur serveur' });
+  }
+});
+
+// Route pour bloquer un joueur spécifique (ajouter à la table playerbuzz)
+router.post('/lock-player/:username', async (req, res) => {
+  try {
+    const token = req.headers.authorization?.split(' ')[1];
+    const { username } = req.params;
+
+    if (!token) {
+      return res.status(401).json({
+        success: false,
+        message: 'Token d\'authentification requis'
+      });
+    }
+
+    // Vérifier le token et le rôle admin
+    const decoded = jwt.verify(token, JWT_SECRET);
+    
+    // Récupérer les informations de l'utilisateur pour vérifier son rôle
+    const [users] = await pool.execute(
+      'SELECT id, username, email, role FROM users WHERE id = ?',
+      [decoded.userId]
+    );
+
+    if (users.length === 0) {
+      return res.status(401).json({
+        success: false,
+        message: 'Utilisateur non trouvé'
+      });
+    }
+
+    const currentUser = users[0];
+    
+    // Vérifier que l'utilisateur est admin
+    if (currentUser.role !== 'admin') {
+      return res.status(403).json({
+        success: false,
+        message: 'Accès refusé - Rôle administrateur requis'
+      });
+    }
+
+    // Récupérer l'ID de l'utilisateur à bloquer
+    const [targetUsers] = await pool.execute(
+      'SELECT id FROM users WHERE username = ?',
+      [username]
+    );
+
+    if (targetUsers.length === 0) {
+      return res.status(404).json({
+        success: false,
+        message: 'Joueur non trouvé'
+      });
+    }
+
+    const targetUserId = targetUsers[0].id;
+
+    // Vérifier si le joueur est déjà bloqué
+    const [existingLocks] = await pool.execute(
+      'SELECT id FROM playerbuzz WHERE user_id = ?',
+      [targetUserId]
+    );
+
+    if (existingLocks.length > 0) {
+      return res.json({
+        success: true,
+        message: `Joueur ${username} est déjà bloqué`,
+        isLocked: true
+      });
+    }
+
+    // Ajouter le joueur à la table playerbuzz
+    await pool.execute(
+      'INSERT INTO playerbuzz (user_id) VALUES (?)',
+      [targetUserId]
+    );
+
+    res.json({
+      success: true,
+      message: `Joueur ${username} bloqué avec succès`,
+      isLocked: true
+    });
+
+  } catch (error) {
+    console.error('Erreur lors du blocage du joueur:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Erreur serveur lors du blocage du joueur'
+    });
+  }
+});
+
+// Route pour débloquer un joueur spécifique (retirer de la table playerbuzz)
+router.delete('/unlock-player/:username', async (req, res) => {
+  try {
+    const token = req.headers.authorization?.split(' ')[1];
+    const { username } = req.params;
+
+    if (!token) {
+      return res.status(401).json({
+        success: false,
+        message: 'Token d\'authentification requis'
+      });
+    }
+
+    // Vérifier le token et le rôle admin
+    const decoded = jwt.verify(token, JWT_SECRET);
+    
+    // Récupérer les informations de l'utilisateur pour vérifier son rôle
+    const [users] = await pool.execute(
+      'SELECT id, username, email, role FROM users WHERE id = ?',
+      [decoded.userId]
+    );
+
+    if (users.length === 0) {
+      return res.status(401).json({
+        success: false,
+        message: 'Utilisateur non trouvé'
+      });
+    }
+
+    const currentUser = users[0];
+    
+    // Vérifier que l'utilisateur est admin
+    if (currentUser.role !== 'admin') {
+      return res.status(403).json({
+        success: false,
+        message: 'Accès refusé - Rôle administrateur requis'
+      });
+    }
+
+    // Récupérer l'ID de l'utilisateur à débloquer
+    const [targetUsers] = await pool.execute(
+      'SELECT id FROM users WHERE username = ?',
+      [username]
+    );
+
+    if (targetUsers.length === 0) {
+      return res.status(404).json({
+        success: false,
+        message: 'Joueur non trouvé'
+      });
+    }
+
+    const targetUserId = targetUsers[0].id;
+
+    // Vérifier si le joueur est bloqué
+    const [existingLocks] = await pool.execute(
+      'SELECT id FROM playerbuzz WHERE user_id = ?',
+      [targetUserId]
+    );
+
+    if (existingLocks.length === 0) {
+      return res.json({
+        success: true,
+        message: `Joueur ${username} n'est pas bloqué`,
+        isLocked: false
+      });
+    }
+
+    // Supprimer les entrées de playerbuzz pour ce joueur
+    await pool.execute(
+      'DELETE FROM playerbuzz WHERE user_id = ?',
+      [targetUserId]
+    );
+
+    res.json({
+      success: true,
+      message: `Joueur ${username} débloqué avec succès`,
+      isLocked: false
+    });
+
+  } catch (error) {
+    console.error('Erreur lors du déblocage du joueur:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Erreur serveur lors du déblocage du joueur'
+    });
   }
 });
 
