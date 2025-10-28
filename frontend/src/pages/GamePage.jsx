@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useState, useCallback } from "react";
 import { useNavigate } from "react-router";
 import io from "socket.io-client";
 import useAutoLogout from "../hooks/useAutoLogout";
@@ -246,7 +246,8 @@ function GamePage() {
     };
   }, [isAuthenticated, user, isConnected]);
 
-  const buzz = () => {
+  // Fonction pour buzzer
+  const buzz = useCallback(() => {
     if (!isConnected) {
       console.log("❌ Pas connecté au serveur");
       return;
@@ -259,7 +260,40 @@ function GamePage() {
     
     console.log("🔔 Tentative de buzzer...");
     socket.emit("buzz");
-  };
+  }, [isConnected, buzzersEnabled]);
+
+  // Gestion du buzzer avec la barre d'espace
+  useEffect(() => {
+    const handleKeyPress = (event) => {
+      // Ignorer si la barre d'espace n'est pas pressée
+      if (event.code !== 'Space' && event.key !== ' ') {
+        return;
+      }
+
+      // Ignorer si l'utilisateur est en train de taper dans un champ de texte
+      const target = event.target;
+      if (target.tagName === 'INPUT' || target.tagName === 'TEXTAREA' || target.isContentEditable) {
+        return;
+      }
+
+      // Vérifier les conditions pour buzzer (mêmes que pour le bouton)
+      if (!isConnected || buzzedPlayer || !buzzersEnabled || isLocked) {
+        return;
+      }
+
+      // Empêcher le comportement par défaut (défilement de la page)
+      event.preventDefault();
+      
+      // Buzzer
+      buzz();
+    };
+
+    window.addEventListener('keydown', handleKeyPress);
+
+    return () => {
+      window.removeEventListener('keydown', handleKeyPress);
+    };
+  }, [isConnected, buzzedPlayer, buzzersEnabled, isLocked, buzz]);
 
 
   const handleLogout = () => {
