@@ -119,6 +119,16 @@ function AdminPage() {
       localStorage.setItem('buzzedPlayer', JSON.stringify(player));
       console.log("🔔 État du buzzer reçu (Admin):", player);
       
+      // Jouer le son de notification
+      try {
+        const audio = new Audio('/notif.mp3');
+        audio.play().catch(error => {
+          console.warn("⚠️ Impossible de jouer le son de notification:", error);
+        });
+      } catch (error) {
+        console.warn("⚠️ Erreur lors de la création de l'audio:", error);
+      }
+      
       // Mise à jour de l'état local pour la cohérence
       setCountdown(0);
       setBuzzersEnabled(false);
