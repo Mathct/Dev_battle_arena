@@ -13,20 +13,6 @@ const setSocketIO = (io) => {
   ioInstance = io;
 };
 
-// Fonction pour vérifier si un joueur est dans une équipe
-async function isPlayerInTeam(playerName) {
-  try {
-    const result = await pool.query(
-      'SELECT team_name FROM teams WHERE user_id = (SELECT id FROM users WHERE username = ?)',
-      [playerName]
-    );
-    return result[0].length > 0;
-  } catch (error) {
-    console.error('Erreur lors de la vérification de l\'équipe:', error);
-    return false;
-  }
-}
-
 // Fonction pour notifier tous les joueurs d'une mise à jour de leur statut d'équipe
 async function notifyAllPlayersTeamStatus() {
   if (!ioInstance) {
@@ -180,47 +166,6 @@ router.post('/login', async (req, res) => {
     res.status(500).json({
       success: false,
       message: 'Erreur serveur lors de la connexion'
-    });
-  }
-});
-
-// Route pour vérifier le token (middleware d'authentification)
-router.get('/verify', async (req, res) => {
-  try {
-    const token = req.headers.authorization?.split(' ')[1];
-
-    if (!token) {
-      return res.status(401).json({
-        success: false,
-        message: 'Token d\'authentification requis'
-      });
-    }
-
-    const decoded = jwt.verify(token, JWT_SECRET);
-    
-    // Récupérer les informations utilisateur
-    const [users] = await pool.execute(
-      'SELECT id, username, email, role FROM users WHERE id = ?',
-      [decoded.userId]
-    );
-
-    if (users.length === 0) {
-      return res.status(401).json({
-        success: false,
-        message: 'Utilisateur non trouvé'
-      });
-    }
-
-    res.json({
-      success: true,
-      user: users[0]
-    });
-
-  } catch (error) {
-    console.error('Erreur lors de la vérification du token:', error);
-    res.status(401).json({
-      success: false,
-      message: 'Token invalide'
     });
   }
 });
