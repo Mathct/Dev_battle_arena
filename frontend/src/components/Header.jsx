@@ -1,3 +1,4 @@
+import { useEffect } from "react";
 import { useNavigate } from "react-router";
 import "./Header.css";
 
@@ -23,6 +24,17 @@ function Header({ user, onLogout, onReturnHome, isConnected, buzzerNotification,
       navigate('/');
     }
   };
+
+  // Déclencher automatiquement le stop quand le chrono atteint 0
+  useEffect(() => {
+    if (buzzerControl && 
+        buzzerControl.countdown <= 0 && 
+        buzzerControl.enabled === true &&
+        buzzerControl.onToggle) {
+      // Appeler onToggle pour arrêter le chrono (comme si l'admin avait cliqué sur STOP)
+      buzzerControl.onToggle();
+    }
+  }, [buzzerControl]);
 
   return (
     <header className="game-header">
