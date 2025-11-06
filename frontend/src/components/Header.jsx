@@ -71,7 +71,7 @@ function Header({ user, onLogout, onReturnHome, isConnected, buzzerNotification,
       {/* Contrôle buzzer pour l'admin au centre */}
       {buzzerControl && buzzerControl.gameState === 1 && !buzzerControl.buzzedPlayer && (
         <div className="admin-buzzer-control">
-          {buzzerControl.countdown > 0 && (
+          {buzzerControl.countdown > 0 && buzzerControl.enabled && (
             <div className="countdown-display">
               <span className="countdown-text">
                 {buzzerControl.countdown.toFixed(2)}
