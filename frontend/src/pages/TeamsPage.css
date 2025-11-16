@@ -215,6 +215,14 @@
   padding-right: 5px;
 }
 
+/* Affichage en 2 colonnes pour les équipes 1 et 2 */
+.team-1 .team-players,
+.team-2 .team-players {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 10px;
+}
+
 .team-players::-webkit-scrollbar {
   width: 6px;
 }
@@ -242,6 +250,12 @@
   margin-bottom: 10px;
   border-radius: 8px;
   border: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+/* Pour les équipes 1 et 2, retirer margin-bottom car gap gère l'espacement */
+.team-1 .player-item,
+.team-2 .player-item {
+  margin-bottom: 0;
 }
 
 .player-item:hover {
@@ -340,6 +354,12 @@
   background: rgba(255, 255, 255, 0.03);
   border-radius: 8px;
   border: 1px dashed rgba(255, 255, 255, 0.2);
+}
+
+/* Pour les équipes 1 et 2, le message "Aucun joueur assigné" prend toute la largeur */
+.team-1 .empty-team,
+.team-2 .empty-team {
+  grid-column: 1 / -1;
 }
 
 /* Responsive */
