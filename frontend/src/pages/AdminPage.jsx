@@ -823,13 +823,15 @@ function AdminPage() {
 
               {buzzedPlayer ? (
                 <div className="buzzed-info">
-                  <h2>🔔 {buzzedPlayer.name} a buzzé {(() => {
-                    const inTeam1 = teams.team1.find(player => player.username === buzzedPlayer.name);
-                    const inTeam2 = teams.team2.find(player => player.username === buzzedPlayer.name);
-                    if (inTeam1) return `(Équipe 1)`;
-                    if (inTeam2) return `(Équipe 2)`;
-                    return '';
-                  })()}</h2>
+                  <h2>
+                    <span className="team-buzzed-bell">🔔</span> {buzzedPlayer.name} a buzzé {(() => {
+                      const inTeam1 = teams.team1.find(player => player.username === buzzedPlayer.name);
+                      const inTeam2 = teams.team2.find(player => player.username === buzzedPlayer.name);
+                      if (inTeam1) return `(Équipe 1)`;
+                      if (inTeam2) return `(Équipe 2)`;
+                      return '';
+                    })()}
+                  </h2>
                   <div className="buzzed-player-card">
                     <div className="buzzer-actions">
                       <button onClick={validateResponse} className="validate-response-btn">
@@ -885,7 +887,12 @@ function AdminPage() {
                 <div className="teams-container">
                   <div className="team-display team-1">
                     <div className="team-header">
-                      <h3>Équipe 1</h3>
+                      <h3>
+                        Équipe 1
+                        {buzzedPlayer && teams.team1.find(player => player.username === buzzedPlayer.name) && (
+                          <span className="team-buzzed-bell">🔔</span>
+                        )}
+                      </h3>
                       <div className="score-display">
                         <span className="score-value">{scores.team1}</span>
                         <div className="score-controls">
@@ -948,7 +955,12 @@ function AdminPage() {
                   
                   <div className="team-display team-2">
                     <div className="team-header">
-                      <h3>Équipe 2</h3>
+                      <h3>
+                        Équipe 2
+                        {buzzedPlayer && teams.team2.find(player => player.username === buzzedPlayer.name) && (
+                          <span className="team-buzzed-bell">🔔</span>
+                        )}
+                      </h3>
                       <div className="score-display">
                         <span className="score-value">{scores.team2}</span>
                         <div className="score-controls">
