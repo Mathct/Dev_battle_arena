@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useState, useCallback } from "react";
 import { useNavigate } from "react-router";
 import io from "socket.io-client";
 import useAutoLogout from "../hooks/useAutoLogout";
@@ -155,6 +155,25 @@ function AdminPage() {
       setBuzzedPlayer(null);
       localStorage.removeItem('buzzedPlayer');
       console.log("🔄 Buzzer reset reçu (Admin)");
+
+      // Recharger la liste des utilisateurs qui ont buzzé pour mettre à jour les verrous
+      const loadBuzzedUsers = async () => {
+        try {
+          const response = await fetch('http://localhost:3000/api/auth/buzzed-users');
+          if (response.ok) {
+            const data = await response.json();
+            setBuzzedUsers(data.buzzedUsers);
+            console.log("🔄 Liste des utilisateurs qui ont buzzé rechargée après reset:", data.buzzedUsers);
+          } else {
+            // Si l'API échoue, fallback: vider la liste localement
+            setBuzzedUsers([]);
+          }
+        } catch (error) {
+          console.error('Erreur lors du rechargement des utilisateurs qui ont buzzé après reset:', error);
+          setBuzzedUsers([]);
+        }
+      };
+      loadBuzzedUsers();
     });
 
     // Écouter les changements d'état du jeu
@@ -578,8 +597,11 @@ function AdminPage() {
     const newScore = scores[playerTeam] + 1;
     await updateScore(playerTeam, newScore);
 
-    // Reset du buzzer après validation
-    resetBuzzer();
+    // Fin de manche sans déblocage
+    if (isConnected && socket && socket.connected) {
+      socket.emit('endRoundNoUnlock');
+    }
+    setBuzzedPlayer(null);
     
     console.log(`✅ Réponse validée ! ${buzzedPlayer.name} (${playerTeam}) gagne 1 point`);
   };
@@ -628,20 +650,24 @@ function AdminPage() {
       console.error('❌ Erreur lors du rejet de la réponse:', error);
     }
     
-    // Reset du buzzer après refus
-    resetBuzzer();
+    // Fin de manche sans déblocage
+    if (isConnected && socket && socket.connected) {
+      socket.emit('endRoundNoUnlock');
+    }
+    setBuzzedPlayer(null);
     
     console.log(`❌ Réponse refusée pour ${buzzedPlayer.name}`);
   };
 
-  const toggleBuzzers = () => {
-    // Vérifier qu'aucun joueur n'a déjà buzzé
-    if (buzzedPlayer) {
+  const toggleBuzzers = useCallback(() => {
+    const newState = !buzzersEnabled;
+
+    // Bloquer uniquement l'activation si quelqu'un a déjà buzzé
+    if (newState && buzzedPlayer) {
       console.log("⚠️ Impossible d'activer les buzzers car quelqu'un a déjà buzzé");
       return;
     }
     
-    const newState = !buzzersEnabled;
     setBuzzersEnabled(newState);
     
     // Mise à jour de l'état local
@@ -660,7 +686,36 @@ function AdminPage() {
     }
     
     console.log(`🔔 Buzzers ${newState ? 'activés' : 'désactivés'}`);
-  };
+  }, [buzzersEnabled, buzzedPlayer]);
+
+  // Contrôle admin: barre d'espace pour GO/STOP du chrono
+  useEffect(() => {
+    const handleAdminSpaceToggle = (event) => {
+      // Ecarter si ce n'est pas la barre d'espace ou si la touche est répétée
+      if ((event.code !== 'Space' && event.key !== ' ') || event.repeat) {
+        return;
+      }
+
+      // Ignorer si l'utilisateur est en train de saisir du texte
+      const target = event.target;
+      if (target && (target.tagName === 'INPUT' || target.tagName === 'TEXTAREA' || target.isContentEditable)) {
+        return;
+      }
+
+      // Conditions minimales: connecté, partie en cours
+      if (!isConnected || gameState !== 1) {
+        return;
+      }
+
+      event.preventDefault();
+      toggleBuzzers();
+    };
+
+    window.addEventListener('keydown', handleAdminSpaceToggle);
+    return () => {
+      window.removeEventListener('keydown', handleAdminSpaceToggle);
+    };
+  }, [isConnected, gameState, buzzersEnabled, buzzedPlayer, toggleBuzzers]);
 
 
   return (
@@ -716,7 +771,13 @@ function AdminPage() {
 
               {buzzedPlayer ? (
                 <div className="buzzed-info">
-                  <h2>🔔 {buzzedPlayer.name} a buzzé</h2>
+                  <h2>🔔 {buzzedPlayer.name} a buzzé {(() => {
+                    const inTeam1 = teams.team1.find(player => player.username === buzzedPlayer.name);
+                    const inTeam2 = teams.team2.find(player => player.username === buzzedPlayer.name);
+                    if (inTeam1) return `(Équipe 1)`;
+                    if (inTeam2) return `(Équipe 2)`;
+                    return '';
+                  })()}</h2>
                   <div className="buzzed-player-card">
                     <div className="buzzer-actions">
                       <button onClick={validateResponse} className="validate-response-btn">
@@ -727,7 +788,7 @@ function AdminPage() {
                       </button>
                     </div>
                     <button onClick={resetBuzzer} className="reset-button admin-reset">
-                      🔄 Reset Buzzer
+                      🔄 Annuler le Buzz
                     </button>
                   </div>
                 </div>
@@ -762,7 +823,7 @@ function AdminPage() {
                     onClick={clearBuzzes} 
                     className="clear-buzzes-btn"
                   >
-                    Débloquer les Buzzers
+                    Débloquer tous les Buzzers
                   </button>
                 </div>
               </div>

@@ -369,18 +369,55 @@ io.on('connection', (socket) => {
 
   // Reset du buzzer
   socket.on('resetBuzzer', () => {
+    const lastBuzzed = buzzedPlayer ? { ...buzzedPlayer } : null;
     buzzedPlayer = null;
     // Reset tous les joueurs
     players.forEach((player) => {
       player.buzzed = false;
       players.set(player.name, player);
     });
+
+    // Débloquer le joueur qui avait buzzé (supprimer son entrée dans playerbuzz)
+    (async () => {
+      try {
+        if (lastBuzzed && lastBuzzed.name) {
+          const connection = await pool.getConnection();
+          await connection.execute(
+            'DELETE FROM playerbuzz WHERE user_id = (SELECT id FROM users WHERE username = ?)',
+            [lastBuzzed.name]
+          );
+          connection.release();
+          console.log(`🔓 Joueur débloqué après reset: ${lastBuzzed.name}`);
+        } else {
+          // Optionnel: ne rien faire si aucun joueur n'était enregistré
+          console.log('ℹ️ Aucun joueur à débloquer lors du reset');
+        }
+      } catch (error) {
+        console.error('❌ Erreur lors du déblocage du joueur après reset:', error);
+      }
+    })();
     
     console.log(`Buzzer reset`);
     io.emit('buzzerReset');
     const playersList = Array.from(players.values());
     io.emit('playersUpdate', playersList);
     console.log(`📡 Liste des joueurs envoyée après reset:`, playersList.map(p => ({ name: p.name, buzzed: p.buzzed })));
+  });
+
+  // Fin de manche SANS déblocage (utilisé pour Valider/Refuser la réponse)
+  socket.on('endRoundNoUnlock', () => {
+    buzzedPlayer = null;
+    // Reset tous les joueurs
+    players.forEach((player) => {
+      player.buzzed = false;
+      players.set(player.name, player);
+    });
+
+    console.log(`Fin de manche (sans déblocage)`);
+    io.emit('buzzerReset'); // réutiliser le même évènement côté clients
+    const playersList = Array.from(players.values());
+    io.emit('playersUpdate', playersList);
+    console.log(`📡 Liste des joueurs envoyée après fin de manche:`, playersList.map(p => ({ name: p.name, buzzed: p.buzzed })));
   });
 
   // Gestion de l'état des buzzers
