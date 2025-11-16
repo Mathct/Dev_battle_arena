@@ -148,6 +148,23 @@ async function isPlayerInTeam(playerName) {
   }
 }
 
+// Fonction pour récupérer le nom de l'équipe d'un joueur
+async function getPlayerTeamName(playerName) {
+  try {
+    const result = await pool.query(
+      'SELECT team_name FROM teams WHERE user_id = (SELECT id FROM users WHERE username = ?)',
+      [playerName]
+    );
+    if (result[0].length > 0) {
+      return result[0][0].team_name; // 'team1' ou 'team2'
+    }
+    return null;
+  } catch (error) {
+    console.error('Erreur lors de la récupération du nom de l\'équipe:', error);
+    return null;
+  }
+}
+
 // Fonction pour vérifier si un joueur est bloqué (dans la table playerbuzz)
 async function isPlayerLocked(playerName) {
   try {
@@ -278,7 +295,8 @@ io.on('connection', (socket) => {
       
       // Vérifier si le joueur est dans une équipe et envoyer l'information
       const isInTeam = await isPlayerInTeam(playerName);
-      socket.emit('teamStatus', { isInTeam });
+      const teamName = await getPlayerTeamName(playerName);
+      socket.emit('teamStatus', { isInTeam, teamName });
       
       // Notifier tous les clients de la mise à jour des joueurs
       const playersList = Array.from(players.values());
@@ -443,7 +461,8 @@ io.on('connection', (socket) => {
     const player = Array.from(players.values()).find(p => p.id === socket.id);
     if (player) {
       const isInTeam = await isPlayerInTeam(player.name);
-      socket.emit('teamStatusResponse', { isInTeam });
+      const teamName = await getPlayerTeamName(player.name);
+      socket.emit('teamStatusResponse', { isInTeam, teamName });
     }
   });
 
