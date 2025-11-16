@@ -238,7 +238,6 @@
 }
 
 .team-players {
-  max-height: 400px;
   overflow-y: auto;
   padding-right: 5px;
 }
