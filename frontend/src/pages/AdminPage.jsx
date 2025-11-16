@@ -1014,7 +1014,7 @@ function AdminPage() {
               {/* Message si pas d'équipes */}
               {teams.team1.length === 0 && teams.team2.length === 0 && (
                 <div className="no-teams-message">
-                  <p>Aucune équipe assignée. Cliquez sur "Gestion des Équipes" pour créer les équipes.</p>
+                  <p>Aucune équipe assignée. Cliquez sur "Gestion des Équipes" pour créer ou modifier les équipes.</p>
                 </div>
               )}
             </div>
