@@ -577,6 +577,58 @@ function AdminPage() {
     }
   };
 
+  const unlockTeamBuzzers = async (teamName) => {
+    const token = localStorage.getItem('token');
+    if (!token) {
+      console.log('❌ Token manquant');
+      return;
+    }
+
+    const team = teamName === 'team1' ? teams.team1 : teams.team2;
+    if (team.length === 0) {
+      console.log(`⚠️ Aucun joueur dans ${teamName}`);
+      return;
+    }
+
+    const confirmed = window.confirm(`Êtes-vous sûr de vouloir débloquer tous les buzzers de l'${teamName === 'team1' ? 'Équipe 1' : 'Équipe 2'} ?`);
+    if (!confirmed) {
+      return;
+    }
+
+    try {
+      // Débloquer tous les joueurs de l'équipe
+      const unlockPromises = team.map(player => 
+        fetch(`http://localhost:3000/api/auth/unlock-player/${encodeURIComponent(player.username)}`, {
+          method: 'DELETE',
+          headers: {
+            'Authorization': `Bearer ${token}`,
+            'Content-Type': 'application/json'
+          }
+        })
+      );
+
+      await Promise.all(unlockPromises);
+
+      // Recharger la liste des joueurs qui ont buzzé
+      const loadBuzzedUsers = async () => {
+        try {
+          const response = await fetch('http://localhost:3000/api/auth/buzzed-users');
+          if (response.ok) {
+            const data = await response.json();
+            setBuzzedUsers(data.buzzedUsers);
+          }
+        } catch (error) {
+          console.error('Erreur lors du rechargement des utilisateurs qui ont buzzé:', error);
+        }
+      };
+      await loadBuzzedUsers();
+      console.log(`✅ Tous les buzzers de l'${teamName === 'team1' ? 'Équipe 1' : 'Équipe 2'} ont été débloqués`);
+    } catch (error) {
+      console.error(`❌ Erreur lors du déblocage des buzzers de l'équipe:`, error);
+      alert('Erreur lors du déblocage des buzzers de l\'équipe');
+    }
+  };
+
   const validateResponse = async () => {
     if (!buzzedPlayer) return;
 
@@ -852,6 +904,15 @@ function AdminPage() {
                         </div>
                       </div>
                     </div>
+                    <div className="team-actions-header">
+                      <button 
+                        className="unlock-team-btn"
+                        onClick={() => unlockTeamBuzzers('team1')}
+                        title="Débloquer tous les buzzers de l'Équipe 1"
+                      >
+                        🔓 Débloquer les buzzers de l'équipe 1
+                      </button>
+                    </div>
                     <div className="team-players">
                       {teams.team1.length === 0 ? (
                         <p className="empty-team">Aucun joueur</p>
@@ -905,6 +966,15 @@ function AdminPage() {
                           </button>
                         </div>
                       </div>
+                    </div>
+                    <div className="team-actions-header">
+                      <button 
+                        className="unlock-team-btn"
+                        onClick={() => unlockTeamBuzzers('team2')}
+                        title="Débloquer tous les buzzers de l'Équipe 2"
+                      >
+                        🔓 Débloquer les buzzers de l'équipe 2
+                      </button>
                     </div>
                     <div className="team-players">
                       {teams.team2.length === 0 ? (

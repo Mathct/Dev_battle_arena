@@ -188,6 +188,36 @@
   background: rgba(255, 255, 255, 0.3);
 }
 
+.team-actions-header {
+  display: flex;
+  justify-content: center;
+  margin-bottom: 15px;
+  padding-bottom: 15px;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.unlock-team-btn {
+  background: linear-gradient(45deg, #f39c12, #e67e22);
+  color: white;
+  border: none;
+  padding: 8px 16px;
+  border-radius: 8px;
+  font-family: 'Orbitron', monospace;
+  font-weight: bold;
+  font-size: 0.85rem;
+  cursor: pointer;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  box-shadow: 0 4px 15px rgba(243, 156, 18, 0.3);
+  transition: all 0.3s ease;
+}
+
+.unlock-team-btn:hover {
+  background: linear-gradient(45deg, #e67e22, #f39c12);
+  box-shadow: 0 6px 20px rgba(243, 156, 18, 0.4);
+  transform: translateY(-2px);
+}
+
 .score-btn.plus {
   background: rgba(46, 204, 113, 0.8);
 }
