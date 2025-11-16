@@ -169,6 +169,53 @@ function TeamsPage() {
     }
   };
 
+  // Fonction pour tout réinitialiser (équipes, buzzers, scores)
+  const resetAll = async () => {
+    const confirmed = window.confirm(
+      '⚠️ ATTENTION : Cette action va :\n' +
+      '• Vider toutes les équipes\n' +
+      '• Débloquer tous les buzzers\n' +
+      '• Réinitialiser les scores à 0\n\n' +
+      'Êtes-vous sûr de vouloir continuer ?'
+    );
+    
+    if (!confirmed) return;
+
+    const token = localStorage.getItem('token');
+    if (!token) {
+      alert('❌ Token manquant');
+      return;
+    }
+
+    setIsLoading(true);
+    try {
+      const response = await fetch('http://localhost:3000/api/auth/reset-all', {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json'
+        }
+      });
+
+      const data = await response.json();
+
+      if (data.success) {
+        console.log('✅ Réinitialisation complète effectuée:', data.message);
+        // Vider les équipes locales
+        setTeam1([]);
+        setTeam2([]);
+      } else {
+        console.error('❌ Erreur lors de la réinitialisation:', data.message);
+        alert('❌ Erreur lors de la réinitialisation: ' + data.message);
+      }
+    } catch (error) {
+      console.error('❌ Erreur lors de la requête:', error);
+      alert('❌ Erreur lors de la réinitialisation');
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
   const handleLogout = () => {
     localStorage.removeItem('token');
     localStorage.removeItem('user');
@@ -222,6 +269,7 @@ function TeamsPage() {
             </div>
 
             <div className="teams-controls">
+              <div className="teams-controls-spacer"></div>
               <button 
                 onClick={validateTeams} 
                 className="teams-btn validate-btn"
@@ -229,6 +277,15 @@ function TeamsPage() {
               >
                 {isLoading ? 'Sauvegarde...' : '✅ Sauvegarder les équipes'}
               </button>
+              <div className="teams-controls-right">
+                <button 
+                  onClick={resetAll} 
+                  className="teams-btn reset-all-btn"
+                  disabled={isLoading}
+                >
+                  🔄 Tout réinitialiser
+                </button>
+              </div>
             </div>
 
             {/* Structure des 3 cartes */}
