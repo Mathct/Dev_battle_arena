@@ -264,7 +264,7 @@ function TeamsPage() {
             <div className="teams-header">
               <h1>Gestion des Équipes</h1>
               <button onClick={goToAdmin} className="teams-btn admin-btn return-btn">
-                Retour sans sauvegarde
+                Retour
               </button>
             </div>
 
