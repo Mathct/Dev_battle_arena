@@ -392,7 +392,7 @@ io.on('connection', (socket) => {
   });
 
   // Reset du buzzer
-  socket.on('resetBuzzer', () => {
+  socket.on('resetBuzzer', async () => {
     const lastBuzzed = buzzedPlayer ? { ...buzzedPlayer } : null;
     buzzedPlayer = null;
     // Reset tous les joueurs
@@ -402,25 +402,25 @@ io.on('connection', (socket) => {
     });
 
     // Débloquer le joueur qui avait buzzé (supprimer son entrée dans playerbuzz)
-    (async () => {
-      try {
-        if (lastBuzzed && lastBuzzed.name) {
-          const connection = await pool.getConnection();
-          await connection.execute(
-            'DELETE FROM playerbuzz WHERE user_id = (SELECT id FROM users WHERE username = ?)',
-            [lastBuzzed.name]
-          );
-          connection.release();
-          console.log(`🔓 Joueur débloqué après reset: ${lastBuzzed.name}`);
-        } else {
-          // Optionnel: ne rien faire si aucun joueur n'était enregistré
-          console.log('ℹ️ Aucun joueur à débloquer lors du reset');
-        }
-      } catch (error) {
-        console.error('❌ Erreur lors du déblocage du joueur après reset:', error);
+    // ATTENTION: Attendre que le DELETE soit terminé avant d'émettre l'événement
+    try {
+      if (lastBuzzed && lastBuzzed.name) {
+        const connection = await pool.getConnection();
+        await connection.execute(
+          'DELETE FROM playerbuzz WHERE user_id = (SELECT id FROM users WHERE username = ?)',
+          [lastBuzzed.name]
+        );
+        connection.release();
+        console.log(`🔓 Joueur débloqué après reset: ${lastBuzzed.name}`);
+      } else {
+        // Optionnel: ne rien faire si aucun joueur n'était enregistré
+        console.log('ℹ️ Aucun joueur à débloquer lors du reset');
       }
-    })();
+    } catch (error) {
+      console.error('❌ Erreur lors du déblocage du joueur après reset:', error);
+    }
     
+    // Émettre l'événement APRÈS que le DELETE soit terminé
     console.log(`Buzzer reset`);
     io.emit('buzzerReset');
     const playersList = Array.from(players.values());
