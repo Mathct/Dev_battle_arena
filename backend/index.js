@@ -38,6 +38,9 @@ app.use(cors());
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
+// Middleware d'authentification
+const { authenticate, requireAdmin } = require('./middleware/auth');
+
 // Routes d'authentification
 const authRoutes = require('./routes/auth');
 app.use('/api/auth', authRoutes);
@@ -63,8 +66,8 @@ app.get('/api/health', (req, res) => {
   });
 });
 
-// Route API pour les données
-app.get('/api/data', (req, res) => {
+// Route API pour les données (protégée - authentification requise)
+app.get('/api/data', authenticate, (req, res) => {
   res.json({ 
     message: 'Données DEV BATTLE ARENA',
     users: io.engine.clientsCount,
@@ -72,8 +75,8 @@ app.get('/api/data', (req, res) => {
   });
 });
 
-// Route pour obtenir l'état du jeu
-app.get('/api/game/state', async (req, res) => {
+// Route pour obtenir l'état du jeu (protégée - authentification requise)
+app.get('/api/game/state', authenticate, async (req, res) => {
   try {
     const connection = await pool.getConnection();
     const [rows] = await connection.execute('SELECT game_state FROM game ORDER BY id DESC LIMIT 1');
@@ -88,7 +91,7 @@ app.get('/api/game/state', async (req, res) => {
 });
 
 // Route pour modifier l'état du jeu (admin seulement)
-app.post('/api/game/state', async (req, res) => {
+app.post('/api/game/state', authenticate, requireAdmin, async (req, res) => {
   try {
     const { gameState } = req.body;
     
