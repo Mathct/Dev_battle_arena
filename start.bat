@@ -1,12 +1,12 @@
 @echo off
 title Dev Battle Arena - Lancement
 echo ========================================
-echo    DDEV BATTLE ARENA - DEMARRAGE
+echo    DEV BATTLE ARENA - DEMARRAGE
 echo ========================================
 echo.
 
 :: Démarrage du serveur backend dans une nouvelle fenêtre
-start "Backend Server" cmd /k "cd /d C:\laragon\www\Dev_battle_arena\backend && node index.js"
+start "Backend Server" cmd /k "cd /d C:\laragon\www\Projets\Dev_battle_arena\backend && node index.js"
 
 :: Attente de quelques secondes pour laisser le backend démarrer
 echo.
@@ -14,7 +14,7 @@ echo Attente de 3 secondes...
 timeout /t 3 /nobreak >nul
 
 :: Démarrage du frontend dans une nouvelle fenêtre
-start "Frontend" cmd /k "cd /d C:\laragon\www\Dev_battle_arena\frontend && npm run dev"
+start "Frontend" cmd /k "cd /d C:\laragon\www\Projets\Dev_battle_arena\frontend && npm run dev"
 
 :: Affichage des URLs et instructions
 echo.
