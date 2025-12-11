@@ -156,7 +156,14 @@ function GamePage() {
   useEffect(() => {
     const loadGameState = async () => {
       try {
-        const response = await fetch('http://localhost:3000/api/game/state');
+        const token = localStorage.getItem('token');
+        if (!token) return;
+        
+        const response = await fetch('http://localhost:3000/api/game/state', {
+          headers: {
+            'Authorization': `Bearer ${token}`
+          }
+        });
         if (response.ok) {
           const data = await response.json();
           setGameState(data.gameState);
@@ -177,7 +184,14 @@ function GamePage() {
       if (!user || !user.username) return;
       
       try {
-        const response = await fetch(`http://localhost:3000/api/auth/is-locked/${encodeURIComponent(user.username)}`);
+        const token = localStorage.getItem('token');
+        if (!token) return;
+        
+        const response = await fetch(`http://localhost:3000/api/auth/is-locked/${encodeURIComponent(user.username)}`, {
+          headers: {
+            'Authorization': `Bearer ${token}`
+          }
+        });
         if (response.ok) {
           const data = await response.json();
           setIsLocked(data.isLocked || false);
